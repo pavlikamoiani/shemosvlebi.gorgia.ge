@@ -11,8 +11,6 @@ class EventController extends Controller
 
     public function index()
     {
-        set_time_limit(0);
-
         $user = Auth::user();
         if (!$user) {
             return response()->json(['message' => 'Unauthorized'], 401);
@@ -35,17 +33,37 @@ class EventController extends Controller
         ];
         $request->validate($rules);
 
+        $branchId = $user->branch_id;
+        if ($user->role === 'admin' && $request->has('branch_id')) {
+            $branchId = $request->branch_id;
+        }
+
+        $branch = \App\Models\Branch::find($branchId);
+        if (!$branch) {
+            return response()->json(['message' => 'Branch not found'], 404);
+        }
+        $interval = $branch->interval_minutes;
+
+        if ($interval) {
+            $lastEvent = \App\Models\Event::where('branch_id', $branchId)
+                ->where('created_at', '>=', now()->subMinutes($interval))
+                ->orderBy('created_at', 'desc')
+                ->first();
+            if ($lastEvent) {
+                return response()->json([
+                    'message' => "You can't add a new event to this branch until {$interval} minutes have passed since the last event."
+                ], 429);
+            }
+        }
+
         $data = [
             'category' => $request->category,
             'supplier' => $request->supplier,
-            'branch_id' => $user->branch_id,
+            'branch_id' => $branchId,
             'user_id' => $user->id,
         ];
 
         if ($user->role === 'admin') {
-            if ($request->has('branch_id')) {
-                $data['branch_id'] = $request->branch_id;
-            }
             if ($request->has('user_id')) {
                 $data['user_id'] = $request->user_id;
             }
