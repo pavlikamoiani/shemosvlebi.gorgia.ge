@@ -9,7 +9,12 @@ use App\Http\Controllers\EventController;
 Route::post('/login', [AuthController::class, 'login']);
 Route::middleware('auth:sanctum')->post('/logout', [AuthController::class, 'logout']);
 
-Route::apiResource('branches', BranchController::class);
+// Route::apiResource('branches', BranchController::class);
+
+Route::post('/branches', [BranchController::class, 'store']);
+Route::get('/branches/{branch}', [BranchController::class, 'show']);
+Route::put('/branches/{branch}', [BranchController::class, 'update']);
+Route::delete('/branches/{branch}', [BranchController::class, 'destroy']);
 
 Route::post('/users', [UserController::class, 'store']);
 Route::put('/users/{user}', [UserController::class, 'update']);
