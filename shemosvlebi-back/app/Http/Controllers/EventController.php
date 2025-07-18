@@ -8,9 +8,15 @@ use Illuminate\Support\Facades\Auth;
 
 class EventController extends Controller
 {
+
     public function index()
     {
+        set_time_limit(0);
+
         $user = Auth::user();
+        if (!$user) {
+            return response()->json(['message' => 'Unauthorized'], 401);
+        }
         if ($user->role === 'admin') {
             return Event::with('branch', 'user')->get();
         }
@@ -20,21 +26,32 @@ class EventController extends Controller
     public function store(Request $request)
     {
         $user = Auth::user();
-        $request->validate([
-            'title' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'start_time' => 'required|date',
-            'end_time' => 'nullable|date|after:start_time',
-        ]);
+        if (!$user) {
+            return response()->json(['message' => 'Unauthorized'], 401);
+        }
+        $rules = [
+            'category' => 'required|string|max:255',
+            'supplier' => 'nullable|string',
+        ];
+        $request->validate($rules);
 
-        $event = Event::create([
-            'title' => $request->title,
-            'description' => $request->description,
+        $data = [
+            'category' => $request->category,
+            'supplier' => $request->supplier,
             'branch_id' => $user->branch_id,
             'user_id' => $user->id,
-            'start_time' => $request->start_time,
-            'end_time' => $request->end_time,
-        ]);
+        ];
+
+        if ($user->role === 'admin') {
+            if ($request->has('branch_id')) {
+                $data['branch_id'] = $request->branch_id;
+            }
+            if ($request->has('user_id')) {
+                $data['user_id'] = $request->user_id;
+            }
+        }
+
+        $event = Event::create($data);
 
         return response()->json($event, 201);
     }
@@ -47,24 +64,40 @@ class EventController extends Controller
     public function update(Request $request, Event $event)
     {
         $user = Auth::user();
+        if (!$user) {
+            return response()->json(['message' => 'Unauthorized'], 401);
+        }
         if ($event->user_id !== $user->id && $user->role !== 'admin') {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 
-        $request->validate([
-            'title' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'start_time' => 'required|date',
-            'end_time' => 'nullable|date|after:start_time',
-        ]);
+        $rules = [
+            'category' => 'required|string|max:255',
+            'supplier' => 'nullable|string',
+        ];
+        $request->validate($rules);
 
-        $event->update($request->all());
+        $data = $request->only(['category', 'supplier']);
+
+        if ($user->role === 'admin') {
+            if ($request->has('branch_id')) {
+                $data['branch_id'] = $request->branch_id;
+            }
+            if ($request->has('user_id')) {
+                $data['user_id'] = $request->user_id;
+            }
+        }
+
+        $event->update($data);
         return $event;
     }
 
     public function destroy(Event $event)
     {
         $user = Auth::user();
+        if (!$user) {
+            return response()->json(['message' => 'Unauthorized'], 401);
+        }
         if ($event->user_id !== $user->id && $user->role !== 'admin') {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
@@ -76,6 +109,9 @@ class EventController extends Controller
     public function otherBranchesEvents()
     {
         $user = Auth::user();
+        if (!$user) {
+            return response()->json(['message' => 'Unauthorized'], 401);
+        }
         return Event::with('branch', 'user')
             ->where('branch_id', '!=', $user->branch_id)
             ->get();
