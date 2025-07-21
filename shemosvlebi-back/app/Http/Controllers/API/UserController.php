@@ -5,12 +5,18 @@ namespace App\Http\Controllers\API;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 
 class UserController extends Controller
 {
     public function store(Request $request)
     {
+        $authUser = Auth::user();
+        if (!$authUser || $authUser->role !== 'admin') {
+            return response()->json(['message' => 'Only admin can add users'], 403);
+        }
+
         $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users',
