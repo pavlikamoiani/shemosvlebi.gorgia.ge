@@ -141,8 +141,6 @@ class EventController extends Controller
         if (!$user) {
             return response()->json(['message' => 'Unauthorized'], 401);
         }
-        return Event::with('branch', 'user')
-            ->where('branch_id', '!=', $user->branch_id)
-            ->get();
+        return Event::with('branch', 'user')->get();
     }
 }

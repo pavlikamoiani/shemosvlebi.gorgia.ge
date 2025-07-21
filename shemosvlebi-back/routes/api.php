@@ -17,10 +17,10 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::post('/events', [EventController::class, 'store']);
     Route::get('/events', [EventController::class, 'index']);
+    Route::get('/events/other-branches', [EventController::class, 'otherBranchesEvents']);
     Route::get('/events/{event}', [EventController::class, 'show']);
     Route::put('/events/{event}', [EventController::class, 'update']);
     Route::delete('/events/{event}', [EventController::class, 'destroy']);
-    Route::get('/events/other-branches', [EventController::class, 'otherBranchesEvents']);
 
     Route::post('/branches', [BranchController::class, 'store']);
     Route::get('/branches/{branch}', [BranchController::class, 'show']);
