@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Event;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use App\Models\Branch;
 
 class EventController extends Controller
 {
@@ -38,21 +39,31 @@ class EventController extends Controller
             $branchId = $request->branch_id;
         }
 
-        $branch = \App\Models\Branch::find($branchId);
+        $branch = Branch::find($branchId);
         if (!$branch) {
             return response()->json(['message' => 'Branch not found'], 404);
         }
         $interval = $branch->interval_minutes;
 
         if ($interval) {
-            $lastEvent = \App\Models\Event::where('branch_id', $branchId)
+            $lastEvent = Event::where('branch_id', $branchId)
                 ->where('created_at', '>=', now()->subMinutes($interval))
                 ->orderBy('created_at', 'desc')
                 ->first();
             if ($lastEvent) {
-                return response()->json([
-                    'message' => "You can't add a new event to this branch until {$interval} minutes have passed since the last event."
-                ], 429);
+                $lastCreated = $lastEvent->created_at;
+                $nextAllowed = $lastCreated->copy()->addMinutes($interval);
+                $now = now();
+
+                $remainingMinutes = $now->lessThan($nextAllowed)
+                    ? ceil($now->diffInMinutes($nextAllowed))
+                    : 0;
+
+                if ($remainingMinutes > 0) {
+                    return response()->json([
+                        'message' => "You can't add a new event to this branch until {$remainingMinutes} minutes have passed since the last event.",
+                    ], 429);
+                }
             }
         }
 

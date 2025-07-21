@@ -26,7 +26,8 @@ class BranchController extends Controller
 
     public function show(Branch $branch)
     {
-        return $branch;
+        $branch->load('events');
+        return response()->json($branch);
     }
 
     public function update(Request $request, Branch $branch)

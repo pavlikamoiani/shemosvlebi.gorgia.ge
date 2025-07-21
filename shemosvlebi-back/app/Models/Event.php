@@ -8,8 +8,6 @@ class Event extends Model
 {
     protected $fillable = ['category', 'supplier', 'branch_id', 'user_id'];
 
-    protected $with = ['branch'];
-
     public function branch()
     {
         return $this->belongsTo(Branch::class);
