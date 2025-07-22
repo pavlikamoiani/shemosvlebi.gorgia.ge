@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Branch extends Model
 {
-    protected $fillable = ['name', 'address', 'interval_minutes', 'start_time', 'end_time'];
+    protected $fillable = ['name', 'address', 'type', 'interval_minutes', 'start_time', 'end_time'];
 
     public function events()
     {
