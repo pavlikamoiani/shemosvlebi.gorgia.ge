@@ -1,0 +1,57 @@
+.fc {
+    font-family: Arial, sans-serif;
+  }
+        
+.fc-toolbar-title {
+    font-size: 1.5em !important;
+    font-weight: bold !important;
+    color: #2d3748 !important;
+  }
+        
+.fc-button-primary {
+    background-color: #017dbe !important;
+    border-color: #017dbe !important;
+}
+        
+.fc-button-primary:hover {
+    background-color: #015a8c !important;
+    border-color: #015a8c !important;
+}
+        
+.fc-button-primary:focus {
+    box-shadow: 0 0 0 0.2rem rgba(1, 125, 190, 0.25) !important;
+}
+
+.fc-daygrid-day:hover {
+    background-color: #e6f4fa !important;
+}
+
+.fc-timegrid-slot {
+    height: 4em !important;
+}
+
+.fc-event {
+    cursor: pointer !important;
+    border-radius: 4px !important;
+    border: 1px solid #017dbe !important;
+    background-color: #017dbe !important;
+}
+
+.fc-event:hover {
+    opacity: 0.8 !important;
+}
+        
+.fc-list-event:hover td {
+    background-color: #e6f4fa !important;
+}
+.tippy-box[data-theme ='light'] {
+  background-color: white;
+  color: black;
+  border: 1px solid #ccc;
+  font-size: 0.85em;
+  padding: 6px;
+}
+
+.fc_event:hover::before {
+    background-color: #fff;
+}
