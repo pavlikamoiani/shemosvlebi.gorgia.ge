@@ -12,4 +12,9 @@ class Kernel extends HttpKernel
         'auth.sanctum' => \Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class,
         'role' => \App\Http\Middleware\RoleMiddleware::class,
     ];
+
+    protected $middleware = [
+        // ...existing middleware...
+        \App\Http\Middleware\Cors::class,
+    ];
 }
