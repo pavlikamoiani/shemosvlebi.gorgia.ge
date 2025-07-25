@@ -4,18 +4,13 @@ import AddUserModal from '../../components/AddUserModal'
 import { ThemeProvider, CssBaseline, Container, Paper, Box, Typography, Button } from '@mui/material'
 import AddIcon from '@mui/icons-material/Add'
 import { createTheme } from '@mui/material/styles'
+import defaultInstance from '../../../api/defaultInstance'
 
 const theme = createTheme()
 
 
 const UserPanel = () => {
-  const exampleUsers = [
-    { id: 1, name: 'John Doe', email: 'john.doe@example.com', branch: 'Development', role: 'ადმინი' },
-    { id: 2, name: 'Jane Smith', email: 'jane.smith@example.com', branch: 'Marketing', role: 'მომხმარებელი' },
-    // add more users if needed
-  ]
-
-  const [users, setUsers] = React.useState(exampleUsers)
+  const [users, setUsers] = React.useState([])
   const [open, setOpen] = React.useState(false)
   const [userData, setUserData] = React.useState({
     id: null,
@@ -24,6 +19,19 @@ const UserPanel = () => {
     branch: '',
     role: ''
   })
+  const [branches, setBranches] = React.useState([])
+
+  React.useEffect(() => {
+    defaultInstance.get('/branches')
+      .then(res => setBranches(res.data))
+      .catch(() => setBranches([]))
+  }, [])
+
+  React.useEffect(() => {
+    defaultInstance.get('/users')
+      .then(res => setUsers(res.data))
+      .catch(() => setUsers([]))
+  }, [])
 
   const handleOpenAdd = () => {
     setUserData({ id: null, name: '', email: '', branch: '', role: '' })
@@ -49,7 +57,7 @@ const UserPanel = () => {
 
       setUsers([...users, { ...userData, id: newId }])
     } else {
-      console.log("User edited:", userData); 
+      console.log("User edited:", userData);
 
       setUsers(users.map(user => user.id === userData.id ? userData : user))
     }
@@ -105,9 +113,9 @@ const UserPanel = () => {
             const userToEdit = users.find(u => u.id === userId);
             if (userToEdit) {
               const userToEdit = users.find(u => u.id === userId)
-            if (userToEdit) handleOpenEdit(userToEdit)
+              if (userToEdit) handleOpenEdit(userToEdit)
             }
-          }} 
+          }}
           />
         </Paper>
       </Container>
@@ -117,6 +125,7 @@ const UserPanel = () => {
         onSubmit={handleSubmit}
         userData={userData}
         setUserData={setUserData}
+        branches={branches}
       />
     </ThemeProvider>
   )

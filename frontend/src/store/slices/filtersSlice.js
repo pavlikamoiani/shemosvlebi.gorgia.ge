@@ -2,20 +2,6 @@ import { createSlice } from '@reduxjs/toolkit'
 
 const initialState = {
   selectedLocation: "დიდუბე", // Default location
-  locations: [
-    "დიდუბე", 
-    "წყალსადენი", 
-    "გლდანი", 
-    "ბათუმი(საკონსერვო)", 
-    "ბათუმი (დე-ეს-კა)", 
-    "თელავი", 
-    "ქუთაისი", 
-    "საბურთალო", 
-    "რუსთავი", 
-    "ლილო", 
-    "გორი", 
-    "ვაკე"
-  ],
 }
 
 const filtersSlice = createSlice({

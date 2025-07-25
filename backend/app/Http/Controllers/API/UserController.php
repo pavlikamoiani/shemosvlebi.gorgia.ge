@@ -10,6 +10,14 @@ use Illuminate\Support\Facades\Hash;
 
 class UserController extends Controller
 {
+
+    public function index()
+    {
+        $data = User::with('branch')->select('id', 'name', 'email', 'role', 'branch_id', 'created_at', 'updated_at')->get();
+
+        return response()->json($data);
+    }
+
     public function store(Request $request)
     {
         $authUser = Auth::user();

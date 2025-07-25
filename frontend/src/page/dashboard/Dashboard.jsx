@@ -1,4 +1,4 @@
-import { React, useState } from "react"
+import { React, useState, useEffect } from "react"
 import { useSelector, useDispatch } from 'react-redux'
 import { selectFilteredEvents, selectSelectedLocation } from '../../store/selectors'
 import { addEvent, deleteEvent, updateEvent } from '../../store/slices/eventsSlice'
@@ -12,18 +12,50 @@ import kaLocale from '@fullcalendar/core/locales/ka'
 import "../../assets/css/Dashboard.css"
 import tippy from 'tippy.js';
 import 'tippy.js/dist/tippy.css';
-
+import defaultInstance from "../../../api/defaultInstance"
 const Dashboard = () => {
   // Redux state
   const dispatch = useDispatch()
   const filteredEvents = useSelector(selectFilteredEvents)
   const selectedLocation = useSelector(selectSelectedLocation)
   const user = useSelector(state => state.auth.isLoggedIn)
-  
+  const branchEvents = useSelector(state => state.events.branchEvents)
+
   // Local state
   const [selectedEvent, setSelectedEvent] = useState(null)
   const [modalOpened, setModalOpened] = useState(false)
+  const [branches, setBranches] = useState([]) // new state for branches
+  const [calendarEvents, setCalendarEvents] = useState([]) // backend events
 
+  useEffect(() => {
+    // Fetch branches on mount
+    defaultInstance.get('/branches')
+      .then(res => setBranches(res.data))
+      .catch(() => setBranches([]))
+  }, [])
+
+  useEffect(() => {
+    // Fetch events from backend for calendar
+    defaultInstance.get('/events')
+      .then(res => setCalendarEvents(
+        res.data.map(ev => {
+          const startDate = new Date(ev.event_date);
+          const endDate = new Date(startDate.getTime() + 15 * 60000); // add 15 minutes
+          return {
+            id: ev.id,
+            name: ev.supplier || ev.user?.name || '-',
+            category: ev.category,
+            branch: ev.branch?.name || '-',
+            start: startDate.toISOString(), // ensure ISO format for FullCalendar
+            end: endDate.toISOString(),     // ensure ISO format for FullCalendar
+            backgroundColor: "#3788d8",
+            borderColor: "#3788d8",
+            ...ev
+          }
+        })
+      ))
+      .catch(() => setCalendarEvents([]))
+  }, [])
 
   const handleDateClick = (arg) => {
     if (!user) {
@@ -37,30 +69,101 @@ const Dashboard = () => {
     }
   }
 
+  // Helper to format JS Date exactly as 'YYYY-MM-DDTHH:mm:ss' without milliseconds or timezone
+  function formatLocalDateTime(date) {
+    // Ensure date is a JS Date object
+    if (!(date instanceof Date)) {
+      date = new Date(date);
+    }
+    const pad = n => n.toString().padStart(2, '0');
+
+    // Format exactly matching backend requirement: Y-m-d\TH:i:s
+    return (
+      date.getFullYear() +
+      '-' + pad(date.getMonth() + 1) +
+      '-' + pad(date.getDate()) +
+      'T' + pad(date.getHours()) +
+      ':' + pad(date.getMinutes()) +
+      ':' + pad(date.getSeconds())
+    );
+  }
+
   // uses Redux
-  const handleSaveEvent = ({ name, category, branch }) => {
-    const start = selectedEvent;
-    const end = new Date(start.getTime() + 15 * 60 * 1000); // Default to 15 mins
+  const handleSaveEvent = async (eventData) => {
+    try {
+      const formattedDate = formatLocalDateTime(selectedEvent);
+      console.log("Original date:", selectedEvent);
+      console.log("Formatted date to send:", formattedDate);
 
-    const newEvent = {
-      id: Date.now().toString(),
-      name,
-      category,
-      branch: branch || selectedLocation, // Use selected location as default
-      start,
-      end,
-      backgroundColor: "#3788d8",
-      borderColor: "#3788d8",
-    };
+      const payload = {
+        ...eventData,
+        event_date: formattedDate,
+      };
 
-    dispatch(addEvent(newEvent));
-    setModalOpened(false);
+      console.log("Payload being sent:", payload);
+
+      const response = await defaultInstance.post('/events', payload);
+      console.log("Backend response:", response.data);
+
+      setModalOpened(false);
+
+      defaultInstance.get('/events')
+        .then(res => setCalendarEvents(
+          res.data.map(ev => {
+            const startDate = new Date(ev.event_date);
+            const endDate = new Date(startDate.getTime() + 15 * 60000); // add 15 minutes
+            return {
+              id: ev.id,
+              name: ev.supplier || ev.user?.name || '-',
+              category: ev.category,
+              branch: ev.branch?.name || '-',
+              start: startDate.toISOString(), // ensure ISO format for FullCalendar
+              end: endDate.toISOString(),     // ensure ISO format for FullCalendar
+              backgroundColor: "#3788d8",
+              borderColor: "#3788d8",
+              ...ev
+            }
+          })
+        ));
+    } catch (e) {
+      console.error('Event creation failed:', e.response?.data || e);
+      alert('Event creation failed: ' + (e.response?.data?.message || e.message));
+    }
+  };
+
+  // Helper to delete event via API
+  const handleDeleteEvent = async (event) => {
+    try {
+      await defaultInstance.delete(`/events/${event.id}`);
+      // Refresh events after deletion
+      defaultInstance.get('/events')
+        .then(res => setCalendarEvents(
+          res.data.map(ev => {
+            const startDate = new Date(ev.event_date);
+            const endDate = new Date(startDate.getTime() + 15 * 60000);
+            return {
+              id: ev.id,
+              name: ev.supplier || ev.user?.name || '-',
+              category: ev.category,
+              branch: ev.branch?.name || '-',
+              start: startDate.toISOString(),
+              end: endDate.toISOString(),
+              backgroundColor: "#3788d8",
+              borderColor: "#3788d8",
+              ...ev
+            }
+          })
+        ));
+    } catch (e) {
+      console.error('Event deletion failed:', e.response?.data || e);
+      alert('Event deletion failed: ' + (e.response?.data?.message || e.message));
+    }
   };
 
   const handleEventClick = (clickInfo) => {
     setSelectedEvent(clickInfo.event)
     if (window.confirm(`Delete event '${clickInfo.event.extendedProps.name}'?`)) {
-      dispatch(deleteEvent(clickInfo.event.id))
+      handleDeleteEvent(clickInfo.event); // use API delete
       setSelectedEvent(null)
     }
   }
@@ -117,12 +220,12 @@ const Dashboard = () => {
           <EventModal
             open={modalOpened}
             selectedDate={selectedEvent}
-            //selectedEvent={selectedEvent}
             onSave={handleSaveEvent}
             onClose={() => {
               setModalOpened(false);
               setSelectedEvent(null);
             }}
+            branches={branches} // pass branches here
           />
         )}
 
@@ -158,7 +261,7 @@ const Dashboard = () => {
               day: "დღე",
               list: "სია",
             }}
-            events={filteredEvents}
+            events={calendarEvents}
             dateClick={handleDateClick}
             eventClick={handleEventClick}
             eventDrop={handleEventDrop}
@@ -199,28 +302,28 @@ const Dashboard = () => {
             slotMaxTime="21:15:00"
             eventClassNames="custom-event"
             dayCellClassNames="custom-day-cell"
-            
+
             dayHeaderContent={(arg) => {
-            const viewType = arg.view.type;
-            const date = arg.date;
+              const viewType = arg.view.type;
+              const date = arg.date;
 
-            const weekday = georgianDays[date.getDay()];
-            const day = date.getDate();
-            const month = date.getMonth() + 1;
+              const weekday = georgianDays[date.getDay()];
+              const day = date.getDate();
+              const month = date.getMonth() + 1;
 
-            if (viewType === "timeGridWeek" || viewType === "timeGridDay") {
-              return (
-                <div style={{ display: "flex", flexDirection: "row", gap: "4px", alignItems: "center", justifyContent: "between" }}>
-                  <span>{weekday}</span>
-                  <span style={{ fontSize: "0.9em", fontWeight: "bold", color: "#017dbe" }}>
-                    {`${day}/${month}`}
-                  </span>
-                </div>
-              );
-            }
+              if (viewType === "timeGridWeek" || viewType === "timeGridDay") {
+                return (
+                  <div style={{ display: "flex", flexDirection: "row", gap: "4px", alignItems: "center", justifyContent: "between" }}>
+                    <span>{weekday}</span>
+                    <span style={{ fontSize: "0.9em", fontWeight: "bold", color: "#017dbe" }}>
+                      {`${day}/${month}`}
+                    </span>
+                  </div>
+                );
+              }
 
-            return weekday;
-          }}
+              return weekday;
+            }}
             titleFormat={arg => {
               const month = georgianMonths[arg.date.month];
               const year = arg.date.year;
@@ -236,18 +339,49 @@ const Dashboard = () => {
                     <strong>მომწოდებელი:</strong> ${info.event.extendedProps.name}<br/>
                     <strong>კატეგორია:</strong> ${info.event.extendedProps.category}<br/>
                   `,
-                  allowHTML: true, 
+                  allowHTML: true,
                   placement: 'top',
-                  theme: 'light-border', 
-                  arrow: true, 
+                  theme: 'light-border',
+                  arrow: true,
                 });
               }
             }}
           />
         </div>
+        <div className="mt-4">
+          <h4>ფილიალის ღონისძიებები</h4>
+          <table className="table table-bordered">
+            <thead>
+              <tr>
+                <th>დასახელება</th>
+                <th>კატეგორია</th>
+                <th>ფილიალი</th>
+                <th>დაწყება</th>
+                <th>დასრულება</th>
+              </tr>
+            </thead>
+            <tbody>
+              {branchEvents && branchEvents.length > 0 ? (
+                branchEvents.map(ev => (
+                  <tr key={ev.id}>
+                    <td>{ev.supplier || ev.user?.name || '-'}</td>
+                    <td>{ev.category}</td>
+                    <td>{ev.branch?.name || '-'}</td>
+                    <td>{ev.event_date}</td>
+                    <td>{ev.event_date}</td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan="5" className="text-center">ღონისძიებები არ მოიძებნა</td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
-      
+
   )
 }
 

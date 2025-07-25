@@ -32,4 +32,15 @@ class AuthController extends Controller
 
         return response()->json(['message' => 'Invalid credentials'], 401);
     }
+
+    public function logout(Request $request)
+    {
+        $user = Auth::user();
+        if ($user) {
+            $user->tokens()->delete();
+            return response()->json(['message' => 'Logged out successfully']);
+        }
+
+        return response()->json(['message' => 'Unauthorized'], 401);
+    }
 }

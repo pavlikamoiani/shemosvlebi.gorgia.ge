@@ -1,4 +1,5 @@
-import { createSlice } from '@reduxjs/toolkit'
+import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
+import defaultInstance from '../../../api/defaultInstance'
 
 const initialState = {
   events: [
@@ -53,7 +54,16 @@ const initialState = {
       borderColor: "#ed8936",
     },
   ],
+  branchEvents: [], // new state for branch events
 }
+
+export const fetchBranchEvents = createAsyncThunk(
+  'events/fetchBranchEvents',
+  async (branchId) => {
+    const res = await defaultInstance.get(`/branches/${branchId}`)
+    return res.data.events // <-- only return the events array
+  }
+)
 
 const eventsSlice = createSlice({
   name: 'events',
@@ -73,6 +83,12 @@ const eventsSlice = createSlice({
       }
     },
   },
+  extraReducers: (builder) => {
+    builder
+      .addCase(fetchBranchEvents.fulfilled, (state, action) => {
+        state.branchEvents = action.payload
+      })
+  }
 })
 
 export const { addEvent, deleteEvent, updateEvent } = eventsSlice.actions

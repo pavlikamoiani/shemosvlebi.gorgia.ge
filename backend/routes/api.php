@@ -11,6 +11,8 @@ Route::post('/login', [AuthController::class, 'login']);
 // Route::apiResource('branches', BranchController::class);
 
 Route::middleware('auth:sanctum')->group(function () {
+
+    Route::get('/users', [UserController::class, 'index']);
     Route::post('/users', [UserController::class, 'store']);
     Route::put('/users/{user}', [UserController::class, 'update']);
     Route::delete('/users/{user}', [UserController::class, 'destroy']);
@@ -22,6 +24,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/events/{event}', [EventController::class, 'update']);
     Route::delete('/events/{event}', [EventController::class, 'destroy']);
 
+    Route::get('/branches', [BranchController::class, 'index']);
     Route::post('/branches', [BranchController::class, 'store']);
     Route::get('/branches/{branch}', [BranchController::class, 'show']);
     Route::put('/branches/{branch}', [BranchController::class, 'update']);

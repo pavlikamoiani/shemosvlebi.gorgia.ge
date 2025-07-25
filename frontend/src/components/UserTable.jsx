@@ -156,7 +156,7 @@ export default function UserTable({ users, onDelete, onEdit }) {
                 <TableCell>
                   <Box display="flex" alignItems="center" gap={1}>
                     <BusinessIcon fontSize="small" color="action" />
-                    <Typography variant="body2">{user.branch}</Typography>
+                    <Typography variant="body2">{user?.branch?.name}</Typography>
                   </Box>
                 </TableCell>
                 <TableCell>

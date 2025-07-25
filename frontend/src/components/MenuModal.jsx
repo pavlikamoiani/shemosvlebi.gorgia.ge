@@ -5,6 +5,7 @@ import MenuItem from '@mui/material/MenuItem'
 import { useNavigate } from 'react-router-dom'
 import { useDispatch } from 'react-redux'
 import { logout } from '../store/slices/authSlice'
+import defaultInstance from '../../api/defaultInstance'
 
 
 const MenuModal = () => {
@@ -23,9 +24,9 @@ const MenuModal = () => {
     navigate(path)
     handleMenuClose()
   }
-  
+
   const handleLogout = () => {
-    localStorage.removeItem("userEmail")
+    defaultInstance.post('/logout')
     dispatch(logout())
     navigate("/")
   }

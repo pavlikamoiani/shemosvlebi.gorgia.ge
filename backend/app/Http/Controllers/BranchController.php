@@ -17,12 +17,20 @@ class BranchController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'address' => 'nullable|string|max:255',
-            'type' => 'required|in:Hypermarket,Warehouse',
-            'interval_minutes' => 'nullable|integer|min:1',
-            'start_time' => 'nullable|date',
-            'end_time' => 'nullable|date|after:start_time',
+            'type' => 'required',
+            'interval' => 'nullable|integer|min:1',
+            'startTime' => 'nullable|date_format:H:i',
+            'endTime' => 'nullable|date_format:H:i|after:startTime',
         ]);
-        return Branch::create($request->only(['name', 'address', 'type', 'interval_minutes', 'start_time', 'end_time']));
+
+        return Branch::create([
+            'name' => $request->name,
+            'address' => $request->address,
+            'type' => $request->type,
+            'interval_minutes' => $request->interval,
+            'start_time' => $request->startTime ? now()->setTimeFromTimeString($request->startTime) : null,
+            'end_time' => $request->endTime ? now()->setTimeFromTimeString($request->endTime) : null,
+        ]);
     }
 
     public function show(Branch $branch)

@@ -28,21 +28,27 @@ class EventController extends Controller
         if (!$user) {
             return response()->json(['message' => 'Unauthorized'], 401);
         }
+
         $rules = [
             'category' => 'required|string|max:255',
             'supplier' => 'nullable|string',
+            'event_date' => 'required|date',
         ];
+
         $request->validate($rules);
 
-        $branchId = $user->branch_id;
+        $branchId = $user->branch_id ?? $request->branch;
+
         if ($user->role === 'admin' && $request->has('branch_id')) {
             $branchId = $request->branch_id;
         }
 
         $branch = Branch::find($branchId);
+
         if (!$branch) {
             return response()->json(['message' => 'Branch not found'], 404);
         }
+
         $interval = $branch->interval_minutes;
 
         if ($interval) {
@@ -72,6 +78,7 @@ class EventController extends Controller
             'supplier' => $request->supplier,
             'branch_id' => $branchId,
             'user_id' => $user->id,
+            'event_date' => date('Y-m-d H:i:s', strtotime($request->event_date)),
         ];
 
         if ($user->role === 'admin') {

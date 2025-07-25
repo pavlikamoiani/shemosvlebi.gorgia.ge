@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Event extends Model
 {
-    protected $fillable = ['category', 'supplier', 'branch_id', 'user_id'];
+    protected $fillable = ['category', 'supplier', 'branch_id', 'user_id', 'event_date'];
 
     public function branch()
     {

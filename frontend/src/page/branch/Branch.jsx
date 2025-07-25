@@ -4,19 +4,14 @@ import AddBranchModal from '../../components/AddBranchModal'
 import { ThemeProvider, CssBaseline, Container, Paper, Box, Typography, Button } from '@mui/material'
 import AddIcon from '@mui/icons-material/Add'
 import { createTheme } from '@mui/material/styles'
+import defaultInstance from '../../../api/defaultInstance'
 
 
 const theme = createTheme()
 
 
 const Branch = () => {
-
-const exampleBranches = [
-    { id: 1, name: 'დიდუბე', address: 'დიდუბე 1', type: 'საწყობი' },
-    { id: 2, name: 'წყალსადენი', address: 'წყალსადენი 3', type: 'ჰიპერმარკეტი' },
-  ]
-
-  const [branches, setBranches] = React.useState(exampleBranches)
+  const [branches, setBranches] = React.useState([])
   const [open, setOpen] = React.useState(false)
   const [branchData, setBranchData] = React.useState({
     id: null,
@@ -24,6 +19,24 @@ const exampleBranches = [
     address: '',
     type: ''
   })
+
+  React.useEffect(() => {
+    const fetchBranches = async () => {
+      try {
+        const response = await defaultInstance.get('/branches')
+        const mappedBranches = response.data.map(branch => ({
+          ...branch,
+          type: branch.type === 'Hypermarket' ? 'ჰიპერმარკეტი'
+            : branch.type === 'Warehouse' ? 'საწყობი'
+              : branch.type
+        }))
+        setBranches(mappedBranches)
+      } catch (error) {
+        console.error("Error fetching branches:", error)
+      }
+    }
+    fetchBranches()
+  }, [])
 
   const handleOpenAdd = () => {
     setBranchData({ id: null, name: '', address: '', type: '' })
@@ -40,17 +53,18 @@ const exampleBranches = [
     setBranchData({ id: null, name: '', address: '', type: '' })
   }
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (branchData.id == null) {
-      const newId = Math.max(0, ...branches.map(b => b.id)) + 1
-
-      const newBranch = { ...branchData, id: newId }; //needed only for console log
-      console.log("New branch added:", newBranch);
-
-      setBranches([...branches, { ...branchData, id: newId }])
+      try {
+        const response = await defaultInstance.post('/branches', branchData)
+        const newBranch = response.data
+        console.log("New branch added:", newBranch)
+        setBranches([...branches, newBranch])
+      } catch (error) {
+        console.error("Error adding branch:", error)
+      }
     } else {
-      console.log("Branch edited:", branchData);
-
+      console.log("Branch edited:", branchData)
       setBranches(branches.map(branch => branch.id === branchData.id ? branchData : branch))
     }
     handleClose()
@@ -106,14 +120,14 @@ const exampleBranches = [
             const branchToEdit = branches.find(b => b.id === branchId);
             if (branchToEdit) {
               const branchToEdit = branches.find(b => b.id === branchId)
-            if (branchToEdit) handleOpenEdit(branchToEdit)
+              if (branchToEdit) handleOpenEdit(branchToEdit)
             }
-          }} 
+          }}
           />
         </Paper>
       </Container>
 
-    
+
       <AddBranchModal
         open={open}
         onClose={handleClose}
