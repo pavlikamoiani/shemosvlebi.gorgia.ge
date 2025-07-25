@@ -110,10 +110,11 @@ class EventController extends Controller
         $rules = [
             'category' => 'required|string|max:255',
             'supplier' => 'nullable|string',
+            'branch_id' => 'nullable|exists:branches,id',
         ];
         $request->validate($rules);
 
-        $data = $request->only(['category', 'supplier']);
+        $data = $request->only(['category', 'supplier', 'branch_id']);
 
         if ($user->role === 'admin') {
             if ($request->has('branch_id')) {

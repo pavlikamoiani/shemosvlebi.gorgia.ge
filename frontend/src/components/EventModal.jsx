@@ -3,7 +3,17 @@ import React, { useState, useEffect } from 'react'
 // import '../assets/css/EventModal.css'
 import defaultInstance from '../../api/defaultInstance'
 
-const EventModal = ({ open, selectedDate, onSave, onClose, branches = [] }) => {
+const EventModal = ({
+  open,
+  selectedDate,
+  onSave,
+  onClose,
+  branches = [],
+  event = null,
+  onDelete,
+  isEdit = false,
+  currentBranchId = null // new prop
+}) => {
   const [supplier, setSupplier] = useState('');
   const [category, setCategory] = useState('');
   const [branch, setBranch] = useState('');
@@ -23,6 +33,26 @@ const EventModal = ({ open, selectedDate, onSave, onClose, branches = [] }) => {
     };
   }, [open]);
 
+  // Prefill fields if editing
+  useEffect(() => {
+    if (isEdit && event) {
+      setSupplier(event.extendedProps?.supplier || event.extendedProps?.name || '');
+      setCategory(event.extendedProps?.category || '');
+      setBranch(event.extendedProps?.branch_id || event.extendedProps?.branch || '');
+    } else {
+      setSupplier('');
+      setCategory('');
+      // Set branch to currentBranchId if available, else first branch, else ''
+      if (currentBranchId) {
+        setBranch(String(currentBranchId));
+      } else if (branches.length > 0) {
+        setBranch(String(branches[0].id));
+      } else {
+        setBranch('');
+      }
+    }
+  }, [isEdit, event, open, currentBranchId, branches]);
+
   const handleSave = async (e) => {
     e.preventDefault();
     if (supplier.trim()) {
@@ -39,15 +69,16 @@ const EventModal = ({ open, selectedDate, onSave, onClose, branches = [] }) => {
         // selectedDate,
       };
       try {
-        const response = await defaultInstance.post('/events', eventData);
-        console.log("Saved Event:", response.data);
-        if (onSave) onSave(response.data); // Pass backend response to parent
-        setSupplier('');
-        setCategory('');
-        setBranch('');
+        if (onSave) onSave(eventData); // Use parent handler for both create/edit
       } catch (err) {
         console.error("Event save error:", err);
       }
+    }
+  };
+
+  const handleDelete = () => {
+    if (onDelete && event) {
+      onDelete(event);
     }
   };
 
@@ -90,66 +121,81 @@ const EventModal = ({ open, selectedDate, onSave, onClose, branches = [] }) => {
   const { dateStr, timeStr } = selectedDate ? formatDateTime(selectedDate) : { dateStr: "", timeStr: "" }
 
   return (
-    <div className="modal show d-block" tabIndex="-1" style={{ background: "rgba(0,0,0,0.5)" }}>
-      <div className="modal-dialog">
-        <div className="modal-content">
-          <div className="modal-header">
-            <h2 className="modal-title">დაამატეთ ახალი ღონისძიება</h2>
-            <button type="button" className="btn-close" aria-label="Close" onClick={onClose}></button>
+    <div
+      className="modal-overlay position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center"
+      style={{ background: "rgba(0,0,0,0.4)", zIndex: 1050 }}
+      onClick={onClose}
+    >
+      <div
+        className="modal-content bg-white rounded shadow-lg p-4"
+        style={{
+          minWidth: 400,
+          maxWidth: 500,
+          boxShadow: "inset 0 0 20px rgba(0,0,0,0.15), 0 4px 32px rgba(0,0,0,0.2)",
+        }}
+        onClick={e => e.stopPropagation()}
+      >
+        <h2 className="mb-4 text-center fw-bold">{isEdit ? "რედაქტირება" : "დაამატეთ ახალი ღონისძიება"}</h2>
+        {selectedDate && (
+          <div className="d-flex align-items-center gap-3 mb-3 justify-content-center" style={{ fontSize: "14px", opacity: "0.9" }}>
+            <div className="d-flex align-items-center gap-1">
+              <span>{dateStr}</span>
+            </div>
+            <div className="d-flex align-items-center gap-1">
+              <span>{timeStr}</span>
+            </div>
           </div>
-          <div className="modal-body">
-            {selectedDate && (
-              <div className="d-flex align-items-center gap-3 mb-3" style={{ fontSize: "14px", opacity: "0.9" }}>
-                <div className="d-flex align-items-center gap-1">
-                  <span>{dateStr}</span>
-                </div>
-                <div className="d-flex align-items-center gap-1">
-                  <span>{timeStr}</span>
-                </div>
-              </div>
+        )}
+        <form>
+          <div className="form-group mb-3">
+            <label className="form-label fw-semibold">მომწოდებელი</label>
+            <input
+              type="text"
+              name="supplier"
+              className="form-control border-primary"
+              value={supplier}
+              onChange={e => setSupplier(e.target.value)}
+              required
+            />
+          </div>
+          <div className="form-group mb-3">
+            <label className="form-label fw-semibold">კატეგორია</label>
+            <input
+              type="text"
+              name="category"
+              className="form-control border-primary"
+              value={category}
+              onChange={e => setCategory(e.target.value)}
+              required
+            />
+          </div>
+          <div className="form-group mb-3">
+            <label className="form-label fw-semibold">ფილიალი</label>
+            <select
+              name="branch"
+              className="form-select border-primary"
+              value={branch}
+              onChange={e => setBranch(e.target.value)}
+              disabled={isEdit}
+            >
+              {/* Show all branches, preselect user's branch */}
+              {branches.map(b => (
+                <option key={b.id} value={b.id}>{b.name}</option>
+              ))}
+            </select>
+          </div>
+          <div className="d-flex justify-content-end gap-2 mt-4">
+            <button type="submit" className="btn btn-primary px-4" onClick={handleSave}>
+              {isEdit ? "შენახვა" : "დამატება"}
+            </button>
+            {isEdit && (
+              <button type="button" className="btn btn-danger px-4" onClick={handleDelete}>
+                წაშლა
+              </button>
             )}
-            <form>
-              <div className="mb-3">
-                <label className="form-label">მომწოდებელი</label>
-                <input
-                  type="text"
-                  name="supplier"
-                  className="form-control"
-                  value={supplier}
-                  onChange={e => setSupplier(e.target.value)}
-                />
-              </div>
-              <div className="mb-3">
-                <label className="form-label">კატეგორია</label>
-                <input
-                  type="text"
-                  name="category"
-                  className="form-control"
-                  value={category}
-                  onChange={e => setCategory(e.target.value)}
-                />
-              </div>
-              <div className="mb-3">
-                <label className="form-label">ფილიალი</label>
-                <select
-                  name="branch"
-                  className="form-control"
-                  value={branch}
-                  onChange={e => setBranch(e.target.value)}
-                >
-                  <option value="">აირჩიეთ ფილიალი</option>
-                  {branches.map(b => (
-                    <option key={b.id} value={b.id}>{b.name}</option>
-                  ))}
-                </select>
-              </div>
-            </form>
+            <button type="button" className="btn btn-outline-secondary px-4" onClick={onClose}>გაუქმება</button>
           </div>
-          <div className="modal-footer">
-            <button type="submit" className="btn btn-primary" onClick={handleSave}>შენახვა</button>
-            <button type="button" className="btn btn-secondary" onClick={onClose}>გაუქმება</button>
-          </div>
-        </div>
+        </form>
       </div>
     </div>
   )

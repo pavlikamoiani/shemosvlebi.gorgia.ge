@@ -26,6 +26,8 @@ const Dashboard = () => {
   const [modalOpened, setModalOpened] = useState(false)
   const [branches, setBranches] = useState([]) // new state for branches
   const [calendarEvents, setCalendarEvents] = useState([]) // backend events
+  const [editModalOpened, setEditModalOpened] = useState(false)
+  const [eventToEdit, setEventToEdit] = useState(null)
 
   useEffect(() => {
     // Fetch branches on mount
@@ -131,6 +133,41 @@ const Dashboard = () => {
     }
   };
 
+  // Handler for updating event
+  const handleUpdateEvent = async (eventData) => {
+    if (!eventToEdit) return;
+    try {
+      const payload = {
+        ...eventData,
+        event_date: eventToEdit.start.toISOString(),
+      };
+      await defaultInstance.put(`/events/${eventToEdit.id}`, payload);
+      setEditModalOpened(false);
+      setEventToEdit(null);
+      // Refresh events
+      defaultInstance.get('/events')
+        .then(res => setCalendarEvents(
+          res.data.map(ev => {
+            const startDate = new Date(ev.event_date);
+            const endDate = new Date(startDate.getTime() + 15 * 60000);
+            return {
+              id: ev.id,
+              name: ev.supplier || ev.user?.name || '-',
+              category: ev.category,
+              branch: ev.branch?.name || '-',
+              start: startDate.toISOString(),
+              end: endDate.toISOString(),
+              backgroundColor: "#3788d8",
+              borderColor: "#3788d8",
+              ...ev
+            }
+          })
+        ));
+    } catch (e) {
+      alert('Event update failed: ' + (e.response?.data?.message || e.message));
+    }
+  };
+
   // Helper to delete event via API
   const handleDeleteEvent = async (event) => {
     try {
@@ -160,12 +197,40 @@ const Dashboard = () => {
     }
   };
 
-  const handleEventClick = (clickInfo) => {
-    setSelectedEvent(clickInfo.event)
-    if (window.confirm(`Delete event '${clickInfo.event.extendedProps.name}'?`)) {
-      handleDeleteEvent(clickInfo.event); // use API delete
-      setSelectedEvent(null)
+  // Handler for deleting event from modal
+  const handleDeleteEventFromModal = async () => {
+    if (!eventToEdit) return;
+    try {
+      await defaultInstance.delete(`/events/${eventToEdit.id}`);
+      setEditModalOpened(false);
+      setEventToEdit(null);
+      // Refresh events
+      defaultInstance.get('/events')
+        .then(res => setCalendarEvents(
+          res.data.map(ev => {
+            const startDate = new Date(ev.event_date);
+            const endDate = new Date(startDate.getTime() + 15 * 60000);
+            return {
+              id: ev.id,
+              name: ev.supplier || ev.user?.name || '-',
+              category: ev.category,
+              branch: ev.branch?.name || '-',
+              start: startDate.toISOString(),
+              end: endDate.toISOString(),
+              backgroundColor: "#3788d8",
+              borderColor: "#3788d8",
+              ...ev
+            }
+          })
+        ));
+    } catch (e) {
+      alert('Event deletion failed: ' + (e.response?.data?.message || e.message));
     }
+  }
+
+  const handleEventClick = (clickInfo) => {
+    setEventToEdit(clickInfo.event);
+    setEditModalOpened(true);
   }
 
   const handleEventDrop = (dropInfo) => {
@@ -225,7 +290,24 @@ const Dashboard = () => {
               setModalOpened(false);
               setSelectedEvent(null);
             }}
-            branches={branches} // pass branches here
+            branches={branches}
+            currentBranchId={user?.branch_id} // pass user's branch id
+          />
+        )}
+        {/* Event Modal for editing */}
+        {editModalOpened && eventToEdit && (
+          <EventModal
+            open={editModalOpened}
+            selectedDate={eventToEdit.start}
+            event={eventToEdit} // pass event object for editing
+            onSave={handleUpdateEvent}
+            onDelete={handleDeleteEventFromModal}
+            onClose={() => {
+              setEditModalOpened(false);
+              setEventToEdit(null);
+            }}
+            branches={branches}
+            isEdit={true}
           />
         )}
 
