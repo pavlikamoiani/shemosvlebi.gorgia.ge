@@ -1,0 +1,61 @@
+.modal-overlay {
+            position: fixed;
+            top: 0; left: 0; 
+            width: 100vw; height: 100vh;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+          }
+          .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            width: 400px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+          }
+          h2 {
+            margin-bottom: 20px;
+            text-align: center;
+          }
+          .form-group {
+            margin-bottom: 16px;
+          }
+          .form-group label {
+            display: block;
+            margin-bottom: 8px;
+          }
+          .form-group input[type="text"],
+          .form-group input[type="email"],
+          .form-group input[type="password"] {
+            width: 100%;
+            padding: 8px;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+            box-sizing: border-box;
+          }
+            .radio-label {
+            margin-right: 16px;
+            user-select: none;
+          }
+          .button-group {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 10px;
+          }
+          button {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+          }
+          button[type="submit"] {
+            background-color: #017dbe;
+            color: white;
+          }
+          .cancel-btn {
+            background-color: #ccc;
+            color: #333;
+          }
