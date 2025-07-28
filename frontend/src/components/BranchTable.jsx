@@ -64,6 +64,12 @@ const StyledTableRow = styled(TableRow)(() => ({
   },
 }))
 
+const typeLabels = {
+  'საწყობი': 'საწყობი',
+  'ჰიპერმარკეტი': 'ჰიპერმარკეტი',
+  'Warehouse': 'საწყობი',
+  'Hypermarket': 'ჰიპერმარკეტი',
+};
 
 export default function UserTable({ branches, onDelete, onEdit }) {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
@@ -122,7 +128,7 @@ export default function UserTable({ branches, onDelete, onEdit }) {
                   </Box>
                 </TableCell>
                 <TableCell>
-                  {branch.type}
+                  {typeLabels[branch.type] || branch.type}
                 </TableCell>
                 <TableCell align="center">
                   <Tooltip title="რედაქტირება">

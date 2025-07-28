@@ -22,6 +22,12 @@ const UserPanel = () => {
   })
   const [branches, setBranches] = React.useState([])
 
+  const fetchUsers = React.useCallback(() => {
+    defaultInstance.get('/users')
+      .then(res => setUsers(res.data))
+      .catch(() => setUsers([]))
+  }, []);
+
   React.useEffect(() => {
     defaultInstance.get('/branches')
       .then(res => setBranches(res.data))
@@ -29,10 +35,8 @@ const UserPanel = () => {
   }, [])
 
   React.useEffect(() => {
-    defaultInstance.get('/users')
-      .then(res => setUsers(res.data))
-      .catch(() => setUsers([]))
-  }, [])
+    fetchUsers()
+  }, [fetchUsers])
 
   const handleOpenAdd = () => {
     setUserData({ id: null, name: '', email: '', branch_id: '', role: '', password: '' })
@@ -86,6 +90,8 @@ const UserPanel = () => {
         alert("მომხმარებლის რედაქტირებისას დაფიქსირდა შეცდომა")
       }
     }
+    // После любого успешного добавления/редაქტირების — განაახლეთ მომხმარებლები
+    fetchUsers();
     handleClose()
   }
 
