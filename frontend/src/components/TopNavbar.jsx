@@ -7,6 +7,7 @@ import logo from '../assets/logo.png'
 import MenuModal from './MenuModal'
 import { login, setAuthFromStorage } from '../store/slices/authSlice'
 import defaultInstance from '../../api/defaultInstance'
+import '../assets/css/TopNavbar.css' // импортируем CSS
 
 const TopNavbar = () => {
   const dispatch = useDispatch()
@@ -62,43 +63,20 @@ const TopNavbar = () => {
 
   return (
     <div
-      className="shadow-md p-4 rounded-lg text-gray-700 bg-light"
-      style={{
-        display: "flex",
-        justifyContent: 'space-between',
-        alignItems: "center",
-        gap: "4px",
-        flexWrap: "nowrap",
-        backgroundColor: "#edf2f7",
-        padding: "20px 20px",
-        position: 'relative',
-        overflowX: "auto",
-      }}
+      className="shadow-md p-4 rounded-lg text-gray-700 bg-light topnavbar-root"
     >
       <div
-        style={{ cursor: 'pointer' }}
+        className="topnavbar-logo"
         onClick={() => window.location.reload()}
       >
-        <img src={logo} alt="Logo" style={{ height: '40px', width: 'auto', translateY: '-50%' }} />
+        <img src={logo} alt="Logo" className="topnavbar-logo-img" />
       </div>
-      <div className="d-flex flex-row flex-nowrap align-items-center" style={{ gap: "8px", overflowX: "auto" }}>
+      <div className="d-flex flex-row flex-nowrap align-items-center topnavbar-branches">
         {branches.map((branch) => (
           <button
             key={branch.id}
             onClick={() => handleLocationSelect(branch.name, branch.id)}
-            className={`btn btn-outline-primary ${selectedLocation === branch.name ? "active" : ""}`}
-            style={{
-              fontWeight: "bold",
-              whiteSpace: "nowrap",
-              borderRadius: "20px",
-              borderWidth: selectedLocation === branch.name ? "2px" : "1px",
-              borderColor: selectedLocation === branch.name ? "#017dbe" : "#ced4da",
-              color: selectedLocation === branch.name ? "#017dbe" : "#2d3748",
-              backgroundColor: "transparent",
-              transition: "color 0.2s, border 0.2s",
-              marginRight: "8px",
-              margin: "5px 0",
-            }}
+            className={`btn topnavbar-branch-btn ${selectedLocation === branch.name ? "active" : ""}`}
           >
             {branch.name}
           </button>
