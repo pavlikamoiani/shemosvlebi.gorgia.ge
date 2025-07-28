@@ -34,9 +34,12 @@ const Dashboard = () => {
       .catch(() => setBranches([]))
   }, [])
 
+  // Only fetch events when branches are loaded and selectedLocation is set
   useEffect(() => {
-    const branchObj = branches.find(b => b.name === selectedLocation)
-    const branchId = branchObj?.id
+    if (!branches.length || !selectedLocation) return;
+
+    const branchObj = branches.find(b => b.name === selectedLocation);
+    const branchId = branchObj?.id;
 
     if (branchId) {
       defaultInstance.get(`/events?branch_id=${branchId}`)
@@ -59,27 +62,10 @@ const Dashboard = () => {
         ))
         .catch(() => setCalendarEvents([]))
     } else {
-      defaultInstance.get('/events?branch_id=1')
-        .then(res => setCalendarEvents(
-          res.data.map(ev => {
-            const startDate = new Date(ev.event_date);
-            const endDate = new Date(startDate.getTime() + 15 * 60000);
-            return {
-              id: ev.id,
-              name: ev.supplier || ev.user?.name || '-',
-              category: ev.category,
-              branch: ev.branch?.name || '-',
-              start: startDate.toISOString(),
-              end: endDate.toISOString(),
-              backgroundColor: "#3788d8",
-              borderColor: "#3788d8",
-              ...ev
-            }
-          })
-        ))
-        .catch(() => setCalendarEvents([]))
+      // If no branch found, clear events (do not fetch with branch_id=1 by default)
+      setCalendarEvents([]);
     }
-  }, [selectedLocation, branches])
+  }, [selectedLocation, branches]);
 
   const handleDateClick = (arg) => {
     if (!user) {
