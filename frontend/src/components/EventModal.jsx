@@ -176,7 +176,7 @@ const EventModal = ({
               className="form-select"
               value={branch}
               onChange={e => setBranch(e.target.value)}
-              disabled={isEdit || (!isAdmin && user?.branch_id)}
+              disabled={!isAdmin && user?.branch_id}
             >
               {branches.map(b => (
                 <option key={b.id} value={b.id}>{b.name}</option>
