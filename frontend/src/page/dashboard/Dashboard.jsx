@@ -94,10 +94,19 @@ const Dashboard = () => {
       arg.view.calendar.unselect(); // clearing selection
       tippy.hideAll(); // hide all tooltips
       return;
-    } else {
-      setSelectedEvent(arg.date)
-      setModalOpened(true)
     }
+
+    // Check if non-admin user is trying to add an event to a branch that is not their own
+    const isAdmin = user?.role === 'admin';
+    const userBranch = branches.find(b => b.id === user?.branch_id)?.name;
+
+    if (!isAdmin && userBranch && selectedLocation !== userBranch) {
+      toast.error(`თქვენ შეგიძლიათ დაამატოთ ღონისძიება მხოლოდ "${userBranch}" ფილიალში`);
+      return;
+    }
+
+    setSelectedEvent(arg.date)
+    setModalOpened(true)
   }
 
   // Helper to format JS Date exactly as 'YYYY-MM-DDTHH:mm:ss' without milliseconds or timezone
@@ -123,8 +132,11 @@ const Dashboard = () => {
   const handleSaveEvent = async (eventData) => {
     try {
       const formattedDate = formatLocalDateTime(selectedEvent);
-      console.log("Original date:", selectedEvent);
-      console.log("Formatted date to send:", formattedDate);
+
+      // For non-admin users, ensure branch_id is their assigned branch
+      if (user && user.role !== 'admin' && user.branch_id) {
+        eventData.branch = user.branch_id;
+      }
 
       const payload = {
         ...eventData,

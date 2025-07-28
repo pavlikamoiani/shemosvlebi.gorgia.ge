@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 // Remove custom CSS import
 // import '../assets/css/EventModal.css'
 import defaultInstance from '../../api/defaultInstance'
+import { useSelector } from 'react-redux'
 
 const EventModal = ({
   open,
@@ -17,7 +18,8 @@ const EventModal = ({
   const [supplier, setSupplier] = useState('');
   const [category, setCategory] = useState('');
   const [branch, setBranch] = useState('');
-
+  const user = useSelector(state => state.auth.user);
+  const isAdmin = user?.role === 'admin';
 
   console.log('EventModal open:', selectedDate);
 
@@ -42,8 +44,13 @@ const EventModal = ({
     } else {
       setSupplier('');
       setCategory('');
-      // Set branch to currentBranchId if available, else first branch, else ''
-      if (currentBranchId) {
+
+      // If user is not admin, force their branch_id
+      if (!isAdmin && user?.branch_id) {
+        setBranch(String(user.branch_id));
+      }
+      // Otherwise, set branch to currentBranchId if available, else first branch, else ''
+      else if (currentBranchId) {
         setBranch(String(currentBranchId));
       } else if (branches.length > 0) {
         setBranch(String(branches[0].id));
@@ -51,7 +58,7 @@ const EventModal = ({
         setBranch('');
       }
     }
-  }, [isEdit, event, open, currentBranchId, branches]);
+  }, [isEdit, event, open, currentBranchId, branches, isAdmin, user]);
 
   const handleSave = async (e) => {
     e.preventDefault();
@@ -176,7 +183,7 @@ const EventModal = ({
               className="form-select border-primary"
               value={branch}
               onChange={e => setBranch(e.target.value)}
-              disabled={isEdit}
+              disabled={isEdit || (!isAdmin && user?.branch_id)}
             >
               {branches.map(b => (
                 <option key={b.id} value={b.id}>{b.name}</option>

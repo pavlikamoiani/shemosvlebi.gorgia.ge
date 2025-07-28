@@ -24,9 +24,14 @@ class EventController extends Controller
                 return Event::with('branch', 'user')->where('branch_id', $branchId)->get();
             }
             return Event::with('branch', 'user')->get();
+        } else {
+            // For regular users, respect the branch_id parameter if provided
+            if ($branchId) {
+                return Event::with('branch', 'user')->where('branch_id', $branchId)->get();
+            }
+            // Otherwise default to the user's assigned branch
+            return Event::with('branch', 'user')->where('branch_id', $user->branch_id)->get();
         }
-
-        return Event::with('branch', 'user')->where('branch_id', $user->branch_id)->get();
     }
 
     public function store(Request $request)
@@ -44,10 +49,15 @@ class EventController extends Controller
 
         $request->validate($rules);
 
-        $branchId = $user->branch_id ?? $request->branch;
-
-        if ($user->role === 'admin' && $request->has('branch_id')) {
-            $branchId = $request->branch_id;
+        // For regular users, always use their assigned branch_id regardless of what's in the request
+        if ($user->role !== 'admin') {
+            $branchId = $user->branch_id;
+            if (!$branchId) {
+                return response()->json(['message' => 'You do not have an assigned branch'], 400);
+            }
+        } else {
+            // For admins, allow selecting any branch
+            $branchId = $request->branch_id ?? $request->branch ?? $user->branch_id;
         }
 
         $branch = Branch::find($branchId);
@@ -60,7 +70,6 @@ class EventController extends Controller
         $restrictionMinutes = $branch->interval_minutes ?? 15;
         $eventDate = \Carbon\Carbon::parse($request->event_date);
 
-        // Check for any event in this branch within ±15 minutes of the requested event_date
         $conflictingEvent = Event::where('branch_id', $branchId)
             ->whereBetween('event_date', [
                 $eventDate->copy()->subMinutes($restrictionMinutes),
