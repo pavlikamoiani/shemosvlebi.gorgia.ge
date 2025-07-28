@@ -128,6 +128,34 @@ const Dashboard = () => {
     );
   }
 
+  // Create a reusable function to refresh events with proper branch filter
+  const refreshEvents = () => {
+    const branchObj = branches.find(b => b.name === selectedLocation);
+    const branchId = branchObj?.id;
+
+    if (branchId) {
+      defaultInstance.get(`/events?branch_id=${branchId}`)
+        .then(res => setCalendarEvents(
+          res.data.map(ev => {
+            const startDate = new Date(ev.event_date);
+            const endDate = new Date(startDate.getTime() + 15 * 60000);
+            return {
+              id: ev.id,
+              name: ev.supplier || ev.user?.name || '-',
+              category: ev.category,
+              branch: ev.branch?.name || '-',
+              start: startDate.toISOString(),
+              end: endDate.toISOString(),
+              backgroundColor: "#3788d8",
+              borderColor: "#3788d8",
+              ...ev
+            }
+          })
+        ))
+        .catch(() => setCalendarEvents([]));
+    }
+  };
+
   // uses Redux
   const handleSaveEvent = async (eventData) => {
     try {
@@ -150,24 +178,8 @@ const Dashboard = () => {
 
       setModalOpened(false);
 
-      defaultInstance.get('/events')
-        .then(res => setCalendarEvents(
-          res.data.map(ev => {
-            const startDate = new Date(ev.event_date);
-            const endDate = new Date(startDate.getTime() + 15 * 60000); // add 15 minutes
-            return {
-              id: ev.id,
-              name: ev.supplier || ev.user?.name || '-',
-              category: ev.category,
-              branch: ev.branch?.name || '-',
-              start: startDate.toISOString(), // ensure ISO format for FullCalendar
-              end: endDate.toISOString(),     // ensure ISO format for FullCalendar
-              backgroundColor: "#3788d8",
-              borderColor: "#3788d8",
-              ...ev
-            }
-          })
-        ));
+      // Use the reusable function to refresh events
+      refreshEvents();
     } catch (e) {
       toast.error(e.response?.data?.message);
     }
@@ -199,25 +211,9 @@ const Dashboard = () => {
       await defaultInstance.put(`/events/${eventToEdit.id}`, payload);
       setEditModalOpened(false);
       setEventToEdit(null);
-      // Refresh events
-      defaultInstance.get('/events')
-        .then(res => setCalendarEvents(
-          res.data.map(ev => {
-            const startDate = new Date(ev.event_date);
-            const endDate = new Date(startDate.getTime() + 15 * 60000);
-            return {
-              id: ev.id,
-              name: ev.supplier || ev.user?.name || '-',
-              category: ev.category,
-              branch: ev.branch?.name || '-',
-              start: startDate.toISOString(),
-              end: endDate.toISOString(),
-              backgroundColor: "#3788d8",
-              borderColor: "#3788d8",
-              ...ev
-            }
-          })
-        ));
+
+      // Use the reusable function to refresh events
+      refreshEvents();
     } catch (e) {
       toast.error('Event update failed: ' + (e.response?.data?.message || e.message));
     }
@@ -237,25 +233,9 @@ const Dashboard = () => {
       }
 
       await defaultInstance.delete(`/events/${event.id}`);
-      // Refresh events after deletion
-      defaultInstance.get('/events')
-        .then(res => setCalendarEvents(
-          res.data.map(ev => {
-            const startDate = new Date(ev.event_date);
-            const endDate = new Date(startDate.getTime() + 15 * 60000);
-            return {
-              id: ev.id,
-              name: ev.supplier || ev.user?.name || '-',
-              category: ev.category,
-              branch: ev.branch?.name || '-',
-              start: startDate.toISOString(),
-              end: endDate.toISOString(),
-              backgroundColor: "#3788d8",
-              borderColor: "#3788d8",
-              ...ev
-            }
-          })
-        ));
+
+      // Use the reusable function to refresh events
+      refreshEvents();
     } catch (e) {
       console.error('Event deletion failed:', e.response?.data || e);
       toast.error('Event deletion failed: ' + (e.response?.data?.message || e.message));
@@ -281,25 +261,9 @@ const Dashboard = () => {
       await defaultInstance.delete(`/events/${eventToEdit.id}`);
       setEditModalOpened(false);
       setEventToEdit(null);
-      // Refresh events
-      defaultInstance.get('/events')
-        .then(res => setCalendarEvents(
-          res.data.map(ev => {
-            const startDate = new Date(ev.event_date);
-            const endDate = new Date(startDate.getTime() + 15 * 60000);
-            return {
-              id: ev.id,
-              name: ev.supplier || ev.user?.name || '-',
-              category: ev.category,
-              branch: ev.branch?.name || '-',
-              start: startDate.toISOString(),
-              end: endDate.toISOString(),
-              backgroundColor: "#3788d8",
-              borderColor: "#3788d8",
-              ...ev
-            }
-          })
-        ));
+
+      // Use the reusable function to refresh events
+      refreshEvents();
     } catch (e) {
       toast.error('Event deletion failed: ' + (e.response?.data?.message || e.message));
     }
