@@ -16,8 +16,9 @@ const UserPanel = () => {
     id: null,
     name: '',
     email: '',
-    branch: '',
-    role: ''
+    branch_id: '',
+    role: '',
+    password: ''
   })
   const [branches, setBranches] = React.useState([])
 
@@ -34,21 +35,28 @@ const UserPanel = () => {
   }, [])
 
   const handleOpenAdd = () => {
-    setUserData({ id: null, name: '', email: '', branch: '', role: '' })
+    setUserData({ id: null, name: '', email: '', branch_id: '', role: '', password: '' })
     setOpen(true)
   }
 
   const handleOpenEdit = (user) => {
-    setUserData({ ...user })
+    setUserData({
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      branch_id: user.branch?.id || user.branch_id || '',
+      role: user.role === 'admin' ? 'ადმინი' : (user.role === 'user' ? 'მომხმარებელი' : user.role),
+      password: ''
+    })
     setOpen(true)
   }
 
   const handleClose = () => {
     setOpen(false)
-    setUserData({ id: null, name: '', email: '', branch: '', role: '' })
+    setUserData({ id: null, name: '', email: '', branch_id: '', role: '', password: '' })
   }
 
-  const handleSubmit = () => {
+  const handleSubmit = async (formData) => {
     if (userData.id == null) {
       const newId = Math.max(0, ...users.map(u => u.id)) + 1
 
@@ -57,17 +65,40 @@ const UserPanel = () => {
 
       setUsers([...users, { ...userData, id: newId }])
     } else {
-      console.log("User edited:", userData);
+      try {
+        const payload = {
+          name: userData.name,
+          email: userData.email,
+          role: userData.role === 'ადმინი' ? 'admin' : 'user',
+          branch_id: userData.branch_id,
+        }
+        if (userData.password) payload.password = userData.password
 
-      setUsers(users.map(user => user.id === userData.id ? userData : user))
+        const res = await defaultInstance.put(`/users/${userData.id}`, payload)
+        setUsers(users.map(user =>
+          user.id === userData.id
+            ? { ...res.data, branch: branches.find(b => b.id === res.data.branch_id) }
+            : user
+        ))
+        console.log("User edited:", res.data)
+      } catch (error) {
+        console.error("Error editing user:", error)
+        alert("მომხმარებლის რედაქტირებისას დაფიქსირდა შეცდომა")
+      }
     }
     handleClose()
   }
 
-  const handleDeleteUser = (userId) => {
-    setUsers(users.filter(user => user.id !== userId))
-    console.log("Deleted user with ID:", userId);
-  }
+  const handleDeleteUser = async (userId) => {
+    try {
+      await defaultInstance.delete(`/users/${userId}`);
+      setUsers(users.filter(user => user.id !== userId));
+      console.log("Deleted user with ID:", userId);
+    } catch (error) {
+      console.error("Error deleting user:", error);
+      alert("მომხმარებლის წაშლისას დაფიქსირდა შეცდომა");
+    }
+  };
 
   return (
     <ThemeProvider theme={theme}>
@@ -110,13 +141,9 @@ const UserPanel = () => {
           </Box>
 
           <UserTable users={users} onDelete={handleDeleteUser} onEdit={(userId) => {
-            const userToEdit = users.find(u => u.id === userId);
-            if (userToEdit) {
-              const userToEdit = users.find(u => u.id === userId)
-              if (userToEdit) handleOpenEdit(userToEdit)
-            }
-          }}
-          />
+            const userToEdit = users.find(u => u.id === userId)
+            if (userToEdit) handleOpenEdit(userToEdit)
+          }} />
         </Paper>
       </Container>
       <AddUserModal

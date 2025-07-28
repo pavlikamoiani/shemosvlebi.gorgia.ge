@@ -116,6 +116,7 @@ const TopNavbar = () => {
               right: '2rem',
               top: '50%',
               transform: 'translateY(-50%)',
+              backgroundColor: "#017dbe",
             }}
           >
             ავტორიზაცია

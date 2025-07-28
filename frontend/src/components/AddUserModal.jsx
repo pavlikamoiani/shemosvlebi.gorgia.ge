@@ -23,6 +23,10 @@ const AddUserModal = ({ open, onClose, onSubmit, userData, setUserData, branches
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (isEdit) {
+      await onSubmit(userData)
+      return
+    }
     try {
       const response = await defaultInstance.post('/users', {
         name: userData.name,
@@ -66,7 +70,7 @@ const AddUserModal = ({ open, onClose, onSubmit, userData, setUserData, branches
       >
         <h2 className="mb-4 text-center fw-bold">{isEdit ? 'მომხმარებლის რედაქტირება' : 'დაამატეთ ახალი მომხმარებელი'}</h2>
 
-        <form onSubmit={isEdit ? onSubmit : handleSubmit}>
+        <form onSubmit={handleSubmit}>
           <div className="form-group mb-3">
             <label className="form-label fw-semibold">სახელი გვარი</label>
             <input
@@ -74,7 +78,7 @@ const AddUserModal = ({ open, onClose, onSubmit, userData, setUserData, branches
               name="name"
               value={userData.name}
               onChange={handleChange}
-              className="form-control border-primary"
+              className="form-control"
               required
             />
           </div>
@@ -86,7 +90,7 @@ const AddUserModal = ({ open, onClose, onSubmit, userData, setUserData, branches
               name="email"
               value={userData.email}
               onChange={handleChange}
-              className="form-control border-primary"
+              className="form-control"
               required
             />
           </div>
@@ -97,7 +101,7 @@ const AddUserModal = ({ open, onClose, onSubmit, userData, setUserData, branches
               name="branch_id"
               value={userData.branch_id || ''}
               onChange={handleChange}
-              className="form-select border-primary"
+              className="form-select"
               required
             >
               <option value="" disabled>აირჩიეთ ბრენჩი</option>
@@ -118,7 +122,7 @@ const AddUserModal = ({ open, onClose, onSubmit, userData, setUserData, branches
                   name="password"
                   value={userData.password}
                   onChange={handleChange}
-                  className="form-control border-primary"
+                  className="form-control"
                   style={{
                     paddingRight: 36,
                     marginTop: 4,
@@ -180,7 +184,7 @@ const AddUserModal = ({ open, onClose, onSubmit, userData, setUserData, branches
           )}
 
           <div className="d-flex justify-content-end gap-2">
-            <button type="submit" className="btn btn-primary px-4">{isEdit ? 'შენახვა' : 'შენახვა'}</button>
+            <button style={{ background: '#017dbe', border: 'none' }} type="submit" className="btn btn-primary px-4">{isEdit ? 'შენახვა' : 'შენახვა'}</button>
             <button type="button" onClick={onClose} className="btn btn-outline-secondary px-4">გაუქმება</button>
           </div>
         </form>
