@@ -24,9 +24,14 @@ const LoginModal = ({ open, onClose, email, setEmail, password, setPassword, onL
       }
       localStorage.setItem('authToken', response.data.token);
       localStorage.setItem('userEmail', email);
+      localStorage.setItem('userData', JSON.stringify(response.data.user));
 
-      // Save both email and token in Redux
-      dispatch(login({ email, token: response.data.token }));
+      // Save user data in Redux with full user object
+      dispatch(login({
+        email,
+        token: response.data.token,
+        user: response.data.user
+      }));
 
       if (onLoginSuccess) onLoginSuccess();
       navigate("/");

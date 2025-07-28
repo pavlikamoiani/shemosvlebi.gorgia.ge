@@ -17,8 +17,9 @@ const authSlice = createSlice({
       state.isLoggedIn = !!action.payload.token
       state.userEmail = action.payload.email
       state.accessToken = action.payload.token
-      state.userRole = action.payload.user?.role || null // expects user object with role
-      state.user = action.payload.user || null // expects user object
+      state.user = action.payload.user || null
+      // Set role from user object if available
+      state.userRole = action.payload.user?.role || null
     },
     logout: (state) => {
       state.isLoggedIn = false

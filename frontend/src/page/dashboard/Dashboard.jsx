@@ -21,7 +21,7 @@ const Dashboard = () => {
   const dispatch = useDispatch()
   const filteredEvents = useSelector(selectFilteredEvents)
   const selectedLocation = useSelector(selectSelectedLocation)
-  const user = useSelector(state => state.auth.isLoggedIn)
+  const user = useSelector(state => state.auth.user) // Get full user object instead of just isLoggedIn
   const branchEvents = useSelector(state => state.events.branchEvents)
 
   // Local state
@@ -168,6 +168,18 @@ const Dashboard = () => {
   const handleUpdateEvent = async (eventData) => {
     if (!eventToEdit) return;
     try {
+      // Check if user is authorized to update this event
+      const eventUserId = eventToEdit.extendedProps.user_id;
+      const currentUserId = user?.id;
+      const isAdmin = user?.role === 'admin';
+
+      if (!isAdmin && eventUserId !== currentUserId) {
+        toast.error("თქვენ არ გაქვთ ამ ღონისძიების რედაქტირების უფლება");
+        setEditModalOpened(false);
+        setEventToEdit(null);
+        return;
+      }
+
       const payload = {
         ...eventData,
         event_date: eventToEdit.start.toISOString(),
@@ -202,6 +214,16 @@ const Dashboard = () => {
   // Helper to delete event via API
   const handleDeleteEvent = async (event) => {
     try {
+      // Check if user is authorized to delete this event
+      const eventUserId = event.extendedProps.user_id;
+      const currentUserId = user?.id;
+      const isAdmin = user?.role === 'admin';
+
+      if (!isAdmin && eventUserId !== currentUserId) {
+        toast.error("თქვენ არ გაქვთ ამ ღონისძიების წაშლის უფლება");
+        return;
+      }
+
       await defaultInstance.delete(`/events/${event.id}`);
       // Refresh events after deletion
       defaultInstance.get('/events')
@@ -232,6 +254,18 @@ const Dashboard = () => {
   const handleDeleteEventFromModal = async () => {
     if (!eventToEdit) return;
     try {
+      // Check if user is authorized to delete this event
+      const eventUserId = eventToEdit.extendedProps.user_id;
+      const currentUserId = user?.id;
+      const isAdmin = user?.role === 'admin';
+
+      if (!isAdmin && eventUserId !== currentUserId) {
+        toast.error("თქვენ არ გაქვთ ამ ღონისძიების წაშლის უფლება");
+        setEditModalOpened(false);
+        setEventToEdit(null);
+        return;
+      }
+
       await defaultInstance.delete(`/events/${eventToEdit.id}`);
       setEditModalOpened(false);
       setEventToEdit(null);
@@ -260,8 +294,18 @@ const Dashboard = () => {
   }
 
   const handleEventClick = (clickInfo) => {
-    setEventToEdit(clickInfo.event);
-    setEditModalOpened(true);
+    // Check if user is authorized to edit this event
+    const eventUserId = clickInfo.event.extendedProps.user_id;
+    const currentUserId = user?.id;
+    const isAdmin = user?.role === 'admin';
+
+    // Allow edit if user is admin or event owner
+    if (isAdmin || eventUserId === currentUserId) {
+      setEventToEdit(clickInfo.event);
+      setEditModalOpened(true);
+    } else {
+      toast.error("თქვენ არ გაქვთ ამ ღონისძიების რედაქტირების უფლება");
+    }
   }
 
   const handleEventDrop = (dropInfo) => {

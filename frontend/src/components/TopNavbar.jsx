@@ -29,7 +29,15 @@ const TopNavbar = () => {
   useEffect(() => {
     const email = localStorage.getItem('userEmail')
     const token = localStorage.getItem('authToken')
-    dispatch(setAuthFromStorage({ email, token }))
+    let userData = null;
+
+    try {
+      userData = JSON.parse(localStorage.getItem('userData'));
+    } catch (e) {
+      console.error('Failed to parse user data from localStorage');
+    }
+
+    dispatch(setAuthFromStorage({ email, token, user: userData }))
   }, [dispatch])
 
   const handleLocationSelect = (branchName, branchId) => {
