@@ -38,7 +38,7 @@ const TopNavbar = () => {
   // Handler for location selection
   const handleLocationSelect = (branchName, branchId) => {
     dispatch(setSelectedLocation(branchName))
-    dispatch(fetchBranchEvents(branchId))
+    // dispatch(fetchBranchEvents(branchId)) // <-- Remove this line, not needed
   }
 
   const handleRegisterSubmit = (e) => {

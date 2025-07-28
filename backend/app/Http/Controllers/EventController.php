@@ -16,9 +16,16 @@ class EventController extends Controller
         if (!$user) {
             return response()->json(['message' => 'Unauthorized'], 401);
         }
+
+        $branchId = request()->query('branch_id');
+
         if ($user->role === 'admin') {
+            if ($branchId) {
+                return Event::with('branch', 'user')->where('branch_id', $branchId)->get();
+            }
             return Event::with('branch', 'user')->get();
         }
+
         return Event::with('branch', 'user')->where('branch_id', $user->branch_id)->get();
     }
 
@@ -49,28 +56,22 @@ class EventController extends Controller
             return response()->json(['message' => 'Branch not found'], 404);
         }
 
-        $interval = $branch->interval_minutes;
+        // Always use 15 minutes for the restriction, regardless of branch interval
+        $restrictionMinutes = $branch->interval_minutes ?? 15;
+        $eventDate = \Carbon\Carbon::parse($request->event_date);
 
-        if ($interval) {
-            $lastEvent = Event::where('branch_id', $branchId)
-                ->where('created_at', '>=', now()->subMinutes($interval))
-                ->orderBy('created_at', 'desc')
-                ->first();
-            if ($lastEvent) {
-                $lastCreated = $lastEvent->created_at;
-                $nextAllowed = $lastCreated->copy()->addMinutes($interval);
-                $now = now();
+        // Check for any event in this branch within ±15 minutes of the requested event_date
+        $conflictingEvent = Event::where('branch_id', $branchId)
+            ->whereBetween('event_date', [
+                $eventDate->copy()->subMinutes($restrictionMinutes),
+                $eventDate->copy()->addMinutes($restrictionMinutes)
+            ])
+            ->first();
 
-                $remainingMinutes = $now->lessThan($nextAllowed)
-                    ? ceil($now->diffInMinutes($nextAllowed))
-                    : 0;
-
-                if ($remainingMinutes > 0) {
-                    return response()->json([
-                        'message' => "You can't add a new event to this branch until {$remainingMinutes} minutes have passed since the last event.",
-                    ], 429);
-                }
-            }
+        if ($conflictingEvent) {
+            return response()->json([
+                'message' => $branch->name . ' ფილიალში ღონისძიების ინტერვალი: ' . $restrictionMinutes . ' წუთია',
+            ], 400);
         }
 
         $data = [

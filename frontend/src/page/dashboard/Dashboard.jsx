@@ -13,6 +13,9 @@ import "../../assets/css/Dashboard.css"
 import tippy from 'tippy.js';
 import 'tippy.js/dist/tippy.css';
 import defaultInstance from "../../../api/defaultInstance"
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+
 const Dashboard = () => {
   // Redux state
   const dispatch = useDispatch()
@@ -29,35 +32,61 @@ const Dashboard = () => {
   const [editModalOpened, setEditModalOpened] = useState(false)
   const [eventToEdit, setEventToEdit] = useState(null)
 
+  // Fetch branches on mount
   useEffect(() => {
-    // Fetch branches on mount
     defaultInstance.get('/branches')
       .then(res => setBranches(res.data))
       .catch(() => setBranches([]))
   }, [])
 
+  // Fetch events for selected branch
   useEffect(() => {
-    // Fetch events from backend for calendar
-    defaultInstance.get('/events')
-      .then(res => setCalendarEvents(
-        res.data.map(ev => {
-          const startDate = new Date(ev.event_date);
-          const endDate = new Date(startDate.getTime() + 15 * 60000); // add 15 minutes
-          return {
-            id: ev.id,
-            name: ev.supplier || ev.user?.name || '-',
-            category: ev.category,
-            branch: ev.branch?.name || '-',
-            start: startDate.toISOString(), // ensure ISO format for FullCalendar
-            end: endDate.toISOString(),     // ensure ISO format for FullCalendar
-            backgroundColor: "#3788d8",
-            borderColor: "#3788d8",
-            ...ev
-          }
-        })
-      ))
-      .catch(() => setCalendarEvents([]))
-  }, [])
+    // Find branch id by name
+    const branchObj = branches.find(b => b.name === selectedLocation)
+    const branchId = branchObj?.id
+
+    if (branchId) {
+      defaultInstance.get(`/events?branch_id=${branchId}`)
+        .then(res => setCalendarEvents(
+          res.data.map(ev => {
+            const startDate = new Date(ev.event_date);
+            const endDate = new Date(startDate.getTime() + 15 * 60000);
+            return {
+              id: ev.id,
+              name: ev.supplier || ev.user?.name || '-',
+              category: ev.category,
+              branch: ev.branch?.name || '-',
+              start: startDate.toISOString(),
+              end: endDate.toISOString(),
+              backgroundColor: "#3788d8",
+              borderColor: "#3788d8",
+              ...ev
+            }
+          })
+        ))
+        .catch(() => setCalendarEvents([]))
+    } else {
+      defaultInstance.get('/events?branch_id=1')
+        .then(res => setCalendarEvents(
+          res.data.map(ev => {
+            const startDate = new Date(ev.event_date);
+            const endDate = new Date(startDate.getTime() + 15 * 60000);
+            return {
+              id: ev.id,
+              name: ev.supplier || ev.user?.name || '-',
+              category: ev.category,
+              branch: ev.branch?.name || '-',
+              start: startDate.toISOString(),
+              end: endDate.toISOString(),
+              backgroundColor: "#3788d8",
+              borderColor: "#3788d8",
+              ...ev
+            }
+          })
+        ))
+        .catch(() => setCalendarEvents([]))
+    }
+  }, [selectedLocation, branches])
 
   const handleDateClick = (arg) => {
     if (!user) {
@@ -128,10 +157,12 @@ const Dashboard = () => {
           })
         ));
     } catch (e) {
-      console.error('Event creation failed:', e.response?.data || e);
-      alert('Event creation failed: ' + (e.response?.data?.message || e.message));
+      toast.error(e.response?.data?.message);
     }
+
   };
+
+  console.log("Branches loaded:", branches);
 
   // Handler for updating event
   const handleUpdateEvent = async (eventData) => {
@@ -164,7 +195,7 @@ const Dashboard = () => {
           })
         ));
     } catch (e) {
-      alert('Event update failed: ' + (e.response?.data?.message || e.message));
+      toast.error('Event update failed: ' + (e.response?.data?.message || e.message));
     }
   };
 
@@ -193,7 +224,7 @@ const Dashboard = () => {
         ));
     } catch (e) {
       console.error('Event deletion failed:', e.response?.data || e);
-      alert('Event deletion failed: ' + (e.response?.data?.message || e.message));
+      toast.error('Event deletion failed: ' + (e.response?.data?.message || e.message));
     }
   };
 
@@ -224,7 +255,7 @@ const Dashboard = () => {
           })
         ));
     } catch (e) {
-      alert('Event deletion failed: ' + (e.response?.data?.message || e.message));
+      toast.error('Event deletion failed: ' + (e.response?.data?.message || e.message));
     }
   }
 
@@ -412,9 +443,7 @@ const Dashboard = () => {
               return `${month} ${year}`;
             }}
 
-            //tooltip for events
             eventDidMount={(info) => {
-              // Only show tooltip for events that have an id (i.e., saved events)
               if (info.event.id) {
                 tippy(info.el, {
                   content: `
@@ -430,38 +459,8 @@ const Dashboard = () => {
             }}
           />
         </div>
-        <div className="mt-4">
-          <h4>ფილიალის ღონისძიებები</h4>
-          <table className="table table-bordered">
-            <thead>
-              <tr>
-                <th>დასახელება</th>
-                <th>კატეგორია</th>
-                <th>ფილიალი</th>
-                <th>დაწყება</th>
-                <th>დასრულება</th>
-              </tr>
-            </thead>
-            <tbody>
-              {branchEvents && branchEvents.length > 0 ? (
-                branchEvents.map(ev => (
-                  <tr key={ev.id}>
-                    <td>{ev.supplier || ev.user?.name || '-'}</td>
-                    <td>{ev.category}</td>
-                    <td>{ev.branch?.name || '-'}</td>
-                    <td>{ev.event_date}</td>
-                    <td>{ev.event_date}</td>
-                  </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan="5" className="text-center">ღონისძიებები არ მოიძებნა</td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
       </div>
+      <ToastContainer position="top-right" autoClose={4000} />
     </div>
 
   )

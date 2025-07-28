@@ -1,7 +1,7 @@
 import { createSlice } from '@reduxjs/toolkit'
 
 const initialState = {
-  selectedLocation: "დიდუბე", // Default location
+  selectedLocation: null, // Default location
 }
 
 const filtersSlice = createSlice({
