@@ -152,7 +152,7 @@ const EventModal = ({
             <input
               type="text"
               name="supplier"
-              className="form-control border-primary"
+              className="form-control"
               value={supplier}
               onChange={e => setSupplier(e.target.value)}
               required
@@ -163,7 +163,7 @@ const EventModal = ({
             <input
               type="text"
               name="category"
-              className="form-control border-primary"
+              className="form-control"
               value={category}
               onChange={e => setCategory(e.target.value)}
               required
@@ -173,7 +173,7 @@ const EventModal = ({
             <label className="form-label fw-semibold">ფილიალი</label>
             <select
               name="branch"
-              className="form-select border-primary"
+              className="form-select"
               value={branch}
               onChange={e => setBranch(e.target.value)}
               disabled={isEdit || (!isAdmin && user?.branch_id)}
@@ -184,7 +184,7 @@ const EventModal = ({
             </select>
           </div>
           <div className="d-flex justify-content-end gap-2 mt-4">
-            <button type="submit" className="btn btn-primary px-4" onClick={handleSave}>
+            <button style={{ backgroundColor: "#017dbe", border: "none" }} type="submit" className="btn btn-primary px-4" onClick={handleSave}>
               {isEdit ? "შენახვა" : "დამატება"}
             </button>
             {isEdit && (
