@@ -1,4 +1,4 @@
-import { React, useState, useEffect } from "react"
+import { React, useState, useEffect, useRef } from "react"
 import { useSelector, useDispatch } from 'react-redux'
 import { selectSelectedLocation } from '../../store/selectors'
 import { updateEvent } from '../../store/slices/eventsSlice'
@@ -8,6 +8,7 @@ import timeGridPlugin from "@fullcalendar/timegrid"
 import interactionPlugin from "@fullcalendar/interaction"
 import listPlugin from "@fullcalendar/list"
 import EventModal from "../../components/EventModal"
+import ExportExcel from "../../components/ExportExcel"
 import kaLocale from '@fullcalendar/core/locales/ka'
 import "../../assets/css/Dashboard.css"
 import tippy from 'tippy.js';
@@ -27,6 +28,9 @@ const Dashboard = () => {
   const [calendarEvents, setCalendarEvents] = useState([])
   const [editModalOpened, setEditModalOpened] = useState(false)
   const [eventToEdit, setEventToEdit] = useState(null)
+  const [currentView, setCurrentView] = useState('timeGridWeek')
+  const [calendarApi, setCalendarApi] = useState(null)
+  const calendarRef = useRef(null)
 
   useEffect(() => {
     defaultInstance.get('/branches')
@@ -86,7 +90,7 @@ const Dashboard = () => {
     setModalOpened(true)
   }
 
-  function formatLocalDateTime(date) {
+  const formatLocalDateTime = (date) => {
     if (!(date instanceof Date)) {
       date = new Date(date);
     }
@@ -289,6 +293,33 @@ const Dashboard = () => {
             border-bottom: none !important;
             text-decoration: none !important;
           }
+
+          .export-button {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            z-index: 999;
+            background-color: #017dbe;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 8px 12px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            transition: background-color 0.3s;
+          }
+          
+          .export-button:hover {
+            background-color: #016ca5;
+          }
+          
+          .export-button svg {
+            font-size: 18px;
+          }
         `}
       </style>
       <div
@@ -299,6 +330,13 @@ const Dashboard = () => {
           minHeight: "100vh",
         }}
       >
+        {currentView === 'timeGridDay' && (
+          <ExportExcel
+            calendarApi={calendarApi}
+            selectedLocation={selectedLocation}
+            branches={branches}
+          />
+        )}
 
         {/* Event Modal */}
         {modalOpened && (
@@ -341,6 +379,7 @@ const Dashboard = () => {
           }}
         >
           <FullCalendar
+            ref={calendarRef}
             plugins={[
               dayGridPlugin,
               timeGridPlugin,
@@ -443,6 +482,16 @@ const Dashboard = () => {
                   theme: 'light-border',
                   arrow: true,
                 });
+              }
+            }}
+            viewDidMount={(view) => {
+              setCurrentView(view.view.type);
+              setCalendarApi(view.view.calendar);
+            }}
+            // Add this handler to ensure view state stays updated
+            datesSet={(dateInfo) => {
+              if (calendarApi) {
+                setCurrentView(calendarApi.view.type);
               }
             }}
           />

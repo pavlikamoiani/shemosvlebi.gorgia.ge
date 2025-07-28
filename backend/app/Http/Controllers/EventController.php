@@ -6,6 +6,7 @@ use App\Models\Event;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Branch;
+use Carbon\Carbon;
 
 class EventController extends Controller
 {
@@ -160,5 +161,101 @@ class EventController extends Controller
             return response()->json(['message' => 'Unauthorized'], 401);
         }
         return Event::with('branch', 'user')->get();
+    }
+
+    /**
+     * Export events for a specific date
+     */
+    public function export(Request $request)
+    {
+        $user = Auth::user();
+        if (!$user) {
+            return response()->json(['message' => 'Unauthorized'], 401);
+        }
+
+        $date = $request->query('date');
+        $branchId = $request->query('branch_id');
+
+        if (!$date || !$branchId) {
+            return response()->json(['message' => 'Date and branch_id are required'], 400);
+        }
+
+        // Convert date to Carbon instance
+        $startDate = Carbon::parse($date)->startOfDay();
+        $endDate = Carbon::parse($date)->endOfDay();
+
+        // Check if user has access to this branch
+        if ($user->role !== 'admin' && $user->branch_id != $branchId) {
+            return response()->json(['message' => 'You do not have access to this branch'], 403);
+        }
+
+        // Get events for the specified date and branch
+        $events = Event::with(['branch', 'user'])
+            ->where('branch_id', $branchId)
+            ->whereBetween('event_date', [$startDate, $endDate])
+            ->orderBy('event_date')
+            ->get();
+
+        // Create time slots from 09:00 to 17:00 with 15-minute intervals
+        $timeSlots = [];
+
+        // Define all the time slots we need
+        $allTimeSlots = [
+            '09:00',
+            '09:15',
+            '09:30',
+            '09:45',
+            '10:00',
+            '10:15',
+            '10:30',
+            '10:45',
+            '11:00',
+            '11:15',
+            '11:30',
+            '11:45',
+            '12:00',
+            '12:15',
+            '12:30',
+            '12:45',
+            '13:00',
+            '13:15',
+            '13:30',
+            '13:45',
+            '14:00',
+            '14:15',
+            '14:30',
+            '14:45',
+            '15:00',
+            '15:15',
+            '15:30',
+            '15:45',
+            '16:00',
+            '16:15',
+            '16:30',
+            '16:45',
+            '17:00'
+        ];
+
+        foreach ($allTimeSlots as $timeSlot) {
+            $currentDateTime = Carbon::parse($date . ' ' . $timeSlot);
+            $timeSlotData = [
+                'supplier' => '',
+                'category' => '',
+                'event_date' => $currentDateTime->format('Y-m-d H:i:s')
+            ];
+
+            // Check if there's an event at this time
+            foreach ($events as $event) {
+                $eventTime = Carbon::parse($event->event_date);
+                if ($eventTime->format('H:i') === $currentDateTime->format('H:i')) {
+                    $timeSlotData = $event->toArray();
+                    break;
+                }
+            }
+
+            $timeSlots[] = $timeSlotData;
+        }
+
+        return response()->json($timeSlots);
     }
 }
