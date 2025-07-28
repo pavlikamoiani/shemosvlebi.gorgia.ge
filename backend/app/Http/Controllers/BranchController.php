@@ -15,7 +15,7 @@ class BranchController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'name' => 'required|string|max:255',
+            'name' => 'required|string|unique:branches',
             'address' => 'nullable|string|max:255',
             'type' => 'required',
             'interval' => 'nullable|integer|min:1',
@@ -42,7 +42,7 @@ class BranchController extends Controller
     public function update(Request $request, Branch $branch)
     {
         $request->validate([
-            'name' => 'required|string|max:255',
+            'name' => 'required|string|unique:branches,name,' . $branch->id,
             'address' => 'nullable|string|max:255',
             'type' => 'required|in:Hypermarket,Warehouse',
             'interval_minutes' => 'nullable|integer|min:1',

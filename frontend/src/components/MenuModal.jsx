@@ -89,7 +89,7 @@ const MenuModal = () => {
           გასვლა
         </MenuItem>
       </Menu>
-    </div>
+    </div >
   )
 }
 

@@ -65,24 +65,23 @@ const TopNavbar = () => {
       className="shadow-md p-4 rounded-lg text-gray-700 bg-light"
       style={{
         display: "flex",
-        justifyContent: 'center',
+        justifyContent: 'space-between',
         alignItems: "center",
         gap: "4px",
         flexWrap: "nowrap",
         backgroundColor: "#edf2f7",
-        padding: "10px 20px",
+        padding: "20px 20px",
         position: 'relative',
         overflowX: "auto",
       }}
     >
       <div
-        style={{ position: 'absolute', top: '20px', left: '20px', padding: '5px', cursor: 'pointer' }}
+        style={{ cursor: 'pointer' }}
         onClick={() => window.location.reload()}
       >
         <img src={logo} alt="Logo" style={{ height: '40px', width: 'auto', translateY: '-50%' }} />
       </div>
-      <div style={{ width: '10%', display: 'flex', justifyContent: 'center', alignItems: 'center' }}></div>
-      <div className="d-flex flex-row flex-nowrap align-items-center" style={{ gap: "8px", flex: 1, overflowX: "auto" }}>
+      <div className="d-flex flex-row flex-nowrap align-items-center" style={{ gap: "8px", overflowX: "auto" }}>
         {branches.map((branch) => (
           <button
             key={branch.id}

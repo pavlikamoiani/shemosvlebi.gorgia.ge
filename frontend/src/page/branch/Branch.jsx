@@ -56,24 +56,39 @@ const Branch = () => {
   const handleSubmit = async () => {
     if (branchData.id == null) {
       try {
-        const response = await defaultInstance.post('/branches', branchData)
-        const newBranch = response.data
-        console.log("New branch added:", newBranch)
-        setBranches([...branches, newBranch])
+        const response = await defaultInstance.post('/branches', branchData);
+        const newBranch = response.data;
+        console.log("New branch added:", newBranch);
+        setBranches([...branches, newBranch]);
+        handleClose();
       } catch (error) {
-        console.error("Error adding branch:", error)
+        console.error("Error adding branch:", error);
+        throw error;
       }
     } else {
-      console.log("Branch edited:", branchData)
-      setBranches(branches.map(branch => branch.id === branchData.id ? branchData : branch))
+      try {
+        const response = await defaultInstance.put(`/branches/${branchData.id}`, branchData);
+        const updatedBranch = response.data;
+        console.log("Branch edited:", updatedBranch);
+        setBranches(branches.map(branch => branch.id === branchData.id ? updatedBranch : branch));
+        handleClose();
+      } catch (error) {
+        console.error("Error updating branch:", error);
+        throw error;
+      }
     }
-    handleClose()
   }
 
-  const handleDeleteBranch = (branchId) => {
-    setBranches(branches.filter(branch => branch.id !== branchId))
+  const handleDeleteBranch = async (branchId) => {
+    try {
+      await defaultInstance.delete(`/branches/${branchId}`);
 
-    console.log("Deleted branch with ID:", branchId);
+      setBranches(branches.filter(branch => branch.id !== branchId));
+      console.log("Deleted branch with ID:", branchId);
+    } catch (error) {
+      console.error("Error deleting branch:", error);
+      alert("ფილიალის წაშლისას დაფიქსირდა შეცდომა");
+    }
   }
 
   return (

@@ -1,6 +1,8 @@
-import React from 'react'
+import React, { useState } from 'react'
 
 const AddBranchModal = ({ open, onClose, onSubmit, branchData, setBranchData }) => {
+  const [error, setError] = useState('');
+
   if (!open) return null;
 
   const isEdit = branchData.id !== null;
@@ -13,6 +15,34 @@ const AddBranchModal = ({ open, onClose, onSubmit, branchData, setBranchData }) 
     })
   };
 
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError('');
+    try {
+      await onSubmit();
+      // Remove onClose() from here - it's now called in the parent component
+      // only on successful submission
+    } catch (err) {
+      // Try to extract error message from backend response
+      let msg = 'დაფიქსირდა შეცდომა';
+      if (err?.response?.data?.errors?.name) {
+        // Laravel validation error for name
+        if (
+          err.response.data.errors.name.some(
+            (m) =>
+              m.includes('unique') ||
+              m.includes('უკვე არსებობს') ||
+              m.includes('already been taken')
+          )
+        ) {
+          msg = 'ფილიალის სახელი არ უნდა იყოს დუბლირებული!';
+        } else {
+          msg = err.response.data.errors.name.join(' ');
+        }
+      }
+      setError(msg);
+    }
+  };
 
   return (
     <div
@@ -31,10 +61,7 @@ const AddBranchModal = ({ open, onClose, onSubmit, branchData, setBranchData }) 
       >
         <h2 className="mb-4 text-center fw-bold">{isEdit ? 'ფილიალის რედაქტირება' : 'დაამატეთ ახალი ფილიალი'}</h2>
         <form
-          onSubmit={(e) => {
-            e.preventDefault()
-            onSubmit()
-          }}
+          onSubmit={handleSubmit}
         >
           <div className="form-group mb-3">
             <label className="form-label fw-semibold">ფილიალის სახელი</label>
@@ -43,7 +70,7 @@ const AddBranchModal = ({ open, onClose, onSubmit, branchData, setBranchData }) 
               name="name"
               value={branchData.name}
               onChange={handleChange}
-              className="form-control border-primary"
+              className="form-control"
               placeholder="მაგ: გორგია"
               required
             />
@@ -56,7 +83,7 @@ const AddBranchModal = ({ open, onClose, onSubmit, branchData, setBranchData }) 
               name="address"
               value={branchData.address}
               onChange={handleChange}
-              className="form-control border-primary"
+              className="form-control"
               placeholder="მაგ: თბილისი, აღმაშენებლის 12"
               required
             />
@@ -99,13 +126,13 @@ const AddBranchModal = ({ open, onClose, onSubmit, branchData, setBranchData }) 
               name="interval"
               value={branchData.interval}
               onChange={handleChange}
-              className="form-control border-primary"
+              className="form-control"
               min={1}
               required
             />
           </div>
 
-          <div className="d-flex flex-column gap-3 mb-4 shadow-sm p-3 rounded border border-primary">
+          <div className="d-flex flex-column gap-3 mb-4 shadow-sm p-3 rounded border ">
             <b>ფილიალის სამუშაო საათები.</b>
             <div className='d-flex flex-row gap-4'>
               <div className="form-group flex-fill">
@@ -115,7 +142,7 @@ const AddBranchModal = ({ open, onClose, onSubmit, branchData, setBranchData }) 
                   name="startTime"
                   value={branchData.startTime}
                   onChange={handleChange}
-                  className="form-control border-primary"
+                  className="form-control"
                   required
                 />
               </div>
@@ -126,16 +153,22 @@ const AddBranchModal = ({ open, onClose, onSubmit, branchData, setBranchData }) 
                   name="endTime"
                   value={branchData.endTime}
                   onChange={handleChange}
-                  className="form-control border-primary"
+                  className="form-control"
                   required
                 />
               </div>
             </div>
           </div>
+          {error && (
+            <div className="mt-4 mb-3 text-danger text-center p-2 border border-danger rounded bg-light" style={{ fontWeight: 500 }}>
+              {error}
+            </div>
+          )}
           <div className="d-flex justify-content-end gap-2">
-            <button type="submit" className="btn btn-primary px-4">{isEdit ? 'შენახვა' : 'შენახვა'}</button>
+            <button style={{ background: '#017dbe', border: 'none' }} type="submit" className="btn btn-primary px-4">{isEdit ? 'შენახვა' : 'შენახვა'} </button>
             <button type="button" onClick={onClose} className="btn btn-outline-secondary px-4">გაუქმება</button>
           </div>
+
         </form>
       </div>
     </div>
