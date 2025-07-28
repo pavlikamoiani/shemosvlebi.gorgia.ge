@@ -38,7 +38,6 @@ const Dashboard = () => {
       .catch(() => setBranches([]))
   }, [])
 
-  // Only fetch events when branches are loaded and selectedLocation is set
   useEffect(() => {
     if (!branches.length || !selectedLocation) return;
 
@@ -83,11 +82,47 @@ const Dashboard = () => {
 
     if (!isAdmin && userBranch && selectedLocation !== userBranch) {
       toast.error(`თქვენ შეგიძლიათ დაამატოთ ღონისძიება მხოლოდ "${userBranch}" ფილიალში`);
+      arg.view.calendar.unselect();
       return;
     }
 
-    setSelectedEvent(arg.date)
-    setModalOpened(true)
+    checkEventConflict(arg);
+  }
+
+  const checkEventConflict = async (arg) => {
+    try {
+      const branchObj = branches.find(b => b.name === selectedLocation);
+      const branchId = branchObj?.id;
+
+      if (!branchId) {
+        toast.error("ფილიალი ვერ მოიძებნა");
+        arg.view.calendar.unselect();
+        return;
+      }
+
+      const formattedDate = formatLocalDateTime(arg.date);
+
+      await defaultInstance.post('/events/check-conflict', {
+        branch_id: branchId,
+        event_date: formattedDate
+      });
+
+      setSelectedEvent(arg.date);
+      setModalOpened(true);
+
+      setTimeout(() => {
+        if (arg.view && arg.view.calendar) {
+          arg.view.calendar.unselect();
+        }
+      }, 100);
+
+    } catch (e) {
+      toast.error(e.response?.data?.message || 'დროის კონფლიქტი - გთხოვთ აირჩიოთ სხვა დრო');
+
+      if (arg.view && arg.view.calendar) {
+        arg.view.calendar.unselect();
+      }
+    }
   }
 
   const formatLocalDateTime = (date) => {

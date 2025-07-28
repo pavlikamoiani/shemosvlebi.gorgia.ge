@@ -18,6 +18,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/users/{user}', [UserController::class, 'destroy']);
 
     Route::post('/events', [EventController::class, 'store']);
+    Route::post('/events/check-conflict', [EventController::class, 'checkConflict']);
     Route::get('/events', [EventController::class, 'index']);
     Route::get('/events/export', [EventController::class, 'export']);
     Route::get('/events/other-branches', [EventController::class, 'otherBranchesEvents']);

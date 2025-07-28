@@ -258,4 +258,46 @@ class EventController extends Controller
 
         return response()->json($timeSlots);
     }
+
+    /**
+     * Check for event conflicts before creating an event
+     */
+    public function checkConflict(Request $request)
+    {
+        $user = Auth::user();
+        if (!$user) {
+            return response()->json(['message' => 'Unauthorized'], 401);
+        }
+
+        $request->validate([
+            'branch_id' => 'required|exists:branches,id',
+            'event_date' => 'required|date',
+        ]);
+
+        $branchId = $request->branch_id;
+        $eventDate = \Carbon\Carbon::parse($request->event_date);
+
+        $branch = Branch::find($branchId);
+        if (!$branch) {
+            return response()->json(['message' => 'Branch not found'], 404);
+        }
+
+        // Always use 15 minutes for the restriction, regardless of branch interval
+        $restrictionMinutes = $branch->interval_minutes ?? 15;
+
+        $conflictingEvent = Event::where('branch_id', $branchId)
+            ->whereBetween('event_date', [
+                $eventDate->copy()->subMinutes($restrictionMinutes),
+                $eventDate->copy()->addMinutes($restrictionMinutes)
+            ])
+            ->first();
+
+        if ($conflictingEvent) {
+            return response()->json([
+                'message' => $branch->name . ' ფილიალში ღონისძიების ინტერვალი: ' . $restrictionMinutes . ' წუთია',
+            ], 400);
+        }
+
+        return response()->json(['message' => 'No conflict found']);
+    }
 }
