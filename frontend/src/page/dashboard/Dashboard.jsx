@@ -62,7 +62,6 @@ const Dashboard = () => {
         ))
         .catch(() => setCalendarEvents([]))
     } else {
-      // If no branch found, clear events (do not fetch with branch_id=1 by default)
       setCalendarEvents([]);
     }
   }, [selectedLocation, branches]);
@@ -280,6 +279,16 @@ const Dashboard = () => {
           .fc-button-active {
             box-shadow: inset 0 2px 8px rgba(1, 125, 190, 0.25), 0 0px 0px transparent !important;
           }
+
+          /* Remove any border-bottom or underline from event text */
+          .fc-event-title,
+          .fc-event-time,
+          .fc-event-main,
+          .fc-event-main-frame,
+          .fc-event {
+            border-bottom: none !important;
+            text-decoration: none !important;
+          }
         `}
       </style>
       <div
@@ -369,10 +378,10 @@ const Dashboard = () => {
               const name = arg.event.extendedProps.name;
               const category = arg.event.extendedProps.category;
               return (
-                <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start" }}>
-                  <span style={{ color: "	#BEBEBE" }}>{arg.timeText}</span>
-                  <span style={{ fontWeight: 500 }}>{name}</span>
-                  <span>{category}</span>
+                <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", borderBottom: "none", textDecoration: "none" }}>
+                  <span style={{ color: "#BEBEBE", textDecoration: "none" }}>{arg.timeText}</span>
+                  <span style={{ fontWeight: 500, textDecoration: "none" }}>{name}</span>
+                  <span style={{ textDecoration: "none" }}>{category}</span>
                 </div>
               );
             }}
@@ -406,7 +415,7 @@ const Dashboard = () => {
               if (viewType === "timeGridWeek" || viewType === "timeGridDay") {
                 return (
                   <div style={{ display: "flex", flexDirection: "row", gap: "4px", alignItems: "center", justifyContent: "between" }}>
-                    <span>{weekday}</span>
+                    <span style={{ color: "#017dbe", textDecoration: "none" }}>{weekday}</span>
                     <span style={{ fontSize: "0.9em", fontWeight: "bold", color: "#017dbe" }}>
                       {`${day}/${month}`}
                     </span>
@@ -414,7 +423,7 @@ const Dashboard = () => {
                 );
               }
 
-              return weekday;
+              return <span style={{ color: "#017dbe" }}>{weekday}</span>;
             }}
             titleFormat={arg => {
               const month = georgianMonths[arg.date.month];
@@ -440,7 +449,7 @@ const Dashboard = () => {
         </div>
       </div>
       <ToastContainer position="top-right" autoClose={4000} />
-    </div>
+    </div >
 
   )
 }

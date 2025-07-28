@@ -117,6 +117,7 @@ const TopNavbar = () => {
               top: '50%',
               transform: 'translateY(-50%)',
               backgroundColor: "#017dbe",
+              border: "none",
             }}
           >
             ავტორიზაცია
