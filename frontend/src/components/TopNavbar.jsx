@@ -104,7 +104,6 @@ const TopNavbar = () => {
             onClick={() => setRegisterOpen(true)}
             className="btn btn-primary"
             style={{
-              padding: "10px 20px",
               borderRadius: "8px",
               fontWeight: "bold",
               position: 'absolute',
