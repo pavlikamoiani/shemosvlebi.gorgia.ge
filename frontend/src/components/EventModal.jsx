@@ -178,7 +178,6 @@ const EventModal = ({
               onChange={e => setBranch(e.target.value)}
               disabled={isEdit}
             >
-              {/* Show all branches, preselect user's branch */}
               {branches.map(b => (
                 <option key={b.id} value={b.id}>{b.name}</option>
               ))}

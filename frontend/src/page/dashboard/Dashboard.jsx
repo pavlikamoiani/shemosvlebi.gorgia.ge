@@ -287,9 +287,11 @@ const Dashboard = () => {
     "ივლისი", "აგვისტო", "სექტემბერი", "ოქტომბერი", "ნოემბერი", "დეკემბერი"
   ];
 
+  // Assuming you have branches in state or props
+  const currentBranch = branches.find(b => b.name === selectedLocation)
+
   return (
     <div style={{ position: "relative" }}>
-      {/* Inset box-shadow for aria-pressed="true" buttons */}
       <style>
         {`
           button[aria-pressed="true"] {
@@ -301,7 +303,6 @@ const Dashboard = () => {
           }
         `}
       </style>
-      {/* Main Dashboard */}
       <div
         style={{
           padding: "20px",
@@ -322,7 +323,7 @@ const Dashboard = () => {
               setSelectedEvent(null);
             }}
             branches={branches}
-            currentBranchId={user?.branch_id} // pass user's branch id
+            currentBranchId={currentBranch ? currentBranch.id : null}
           />
         )}
         {/* Event Modal for editing */}
@@ -338,6 +339,7 @@ const Dashboard = () => {
               setEventToEdit(null);
             }}
             branches={branches}
+            currentBranchId={currentBranch ? currentBranch.id : null}
             isEdit={true}
           />
         )}

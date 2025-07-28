@@ -6,6 +6,7 @@ import defaultInstance from '../../api/defaultInstance'
 
 const AddUserModal = ({ open, onClose, onSubmit, userData, setUserData, branches }) => {
   const [showPassword, setShowPassword] = React.useState(false)
+  const [error, setError] = React.useState('')
 
   if (!open) return null;
 
@@ -17,6 +18,7 @@ const AddUserModal = ({ open, onClose, onSubmit, userData, setUserData, branches
       ...userData,
       [name]: value,
     })
+    setError('');
   };
 
   const handleSubmit = async (e) => {
@@ -31,7 +33,20 @@ const AddUserModal = ({ open, onClose, onSubmit, userData, setUserData, branches
       });
       onSubmit(response.data);
     } catch (error) {
-      // handle error (optional)
+      // Show password length error if present
+      if (
+        error.response &&
+        error.response.data &&
+        typeof error.response.data === 'object' &&
+        (
+          error.response.data.password === "The password field must be at least 8 characters." ||
+          (Array.isArray(error.response.data.password) && error.response.data.password.includes("The password field must be at least 8 characters."))
+        )
+      ) {
+        setError("The password field must be at least 8 characters.");
+      } else {
+        setError("დაფიქსირდა შეცდომა. სცადეთ თავიდან.");
+      }
     }
   };
 
@@ -51,6 +66,7 @@ const AddUserModal = ({ open, onClose, onSubmit, userData, setUserData, branches
         onClick={e => e.stopPropagation()}
       >
         <h2 className="mb-4 text-center fw-bold">{isEdit ? 'მომხმარებლის რედაქტირება' : 'დაამატეთ ახალი მომხმარებელი'}</h2>
+
         <form onSubmit={isEdit ? onSubmit : handleSubmit}>
           <div className="form-group mb-3">
             <label className="form-label fw-semibold">სახელი გვარი</label>
@@ -129,7 +145,6 @@ const AddUserModal = ({ open, onClose, onSubmit, userData, setUserData, branches
               </div>
             </div>
           )}
-
           <div className="form-group mb-3">
             <label className="form-label fw-semibold mb-2">როლი:</label>
             <div className="d-flex gap-3">
@@ -159,6 +174,11 @@ const AddUserModal = ({ open, onClose, onSubmit, userData, setUserData, branches
               </div>
             </div>
           </div>
+          {error && (
+            <div className="alert alert-danger py-2 text-center" style={{ fontSize: 15 }}>
+              {error}
+            </div>
+          )}
 
           <div className="d-flex justify-content-end gap-2">
             <button type="submit" className="btn btn-primary px-4">{isEdit ? 'შენახვა' : 'შენახვა'}</button>

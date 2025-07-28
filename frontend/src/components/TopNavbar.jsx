@@ -7,7 +7,6 @@ import logo from '../assets/logo.png'
 import MenuModal from './MenuModal'
 import { login, setAuthFromStorage } from '../store/slices/authSlice'
 import defaultInstance from '../../api/defaultInstance'
-import { fetchBranchEvents } from '../store/slices/eventsSlice'
 
 const TopNavbar = () => {
   // Redux state
@@ -15,7 +14,6 @@ const TopNavbar = () => {
   const selectedLocation = useSelector(selectSelectedLocation)
   const accessToken = useSelector(state => state.auth.accessToken)
 
-  // Local state for branches/locations
   const [branches, setBranches] = useState([])
   const [registerOpen, setRegisterOpen] = useState(false)
   const [registerEmail, setRegisterEmail] = useState("")
@@ -23,7 +21,6 @@ const TopNavbar = () => {
   const [menuActive, setMenuActive] = useState(false)
 
   useEffect(() => {
-    // Fetch branches from backend
     defaultInstance.get('/branches')
       .then(res => setBranches(res.data))
       .catch(() => setBranches([]))
@@ -35,15 +32,12 @@ const TopNavbar = () => {
     dispatch(setAuthFromStorage({ email, token }))
   }, [dispatch])
 
-  // Handler for location selection
   const handleLocationSelect = (branchName, branchId) => {
     dispatch(setSelectedLocation(branchName))
-    // dispatch(fetchBranchEvents(branchId)) // <-- Remove this line, not needed
   }
 
   const handleRegisterSubmit = (e) => {
     e.preventDefault()
-    //saving to local storage
     localStorage.setItem('userEmail', registerEmail)
     dispatch(login(registerEmail))
 
@@ -71,13 +65,16 @@ const TopNavbar = () => {
         backgroundColor: "#edf2f7",
         padding: "10px 20px",
         position: 'relative',
-        overflowX: "auto"
+        overflowX: "auto",
       }}
     >
-      <div style={{ position: 'absolute', top: '10px', left: '10px', padding: '5px' }}>
+      <div
+        style={{ position: 'absolute', top: '20px', left: '20px', padding: '5px', cursor: 'pointer' }}
+        onClick={() => window.location.reload()}
+      >
         <img src={logo} alt="Logo" style={{ height: '40px', width: 'auto', translateY: '-50%' }} />
       </div>
-      <div style={{ width: '10%' }}></div>
+      <div style={{ width: '10%', display: 'flex', justifyContent: 'center', alignItems: 'center' }}></div>
       <div className="d-flex flex-row flex-nowrap align-items-center" style={{ gap: "8px", flex: 1, overflowX: "auto" }}>
         {branches.map((branch) => (
           <button
@@ -93,7 +90,8 @@ const TopNavbar = () => {
               color: selectedLocation === branch.name ? "#017dbe" : "#2d3748",
               backgroundColor: "transparent",
               transition: "color 0.2s, border 0.2s",
-              marginRight: "8px"
+              marginRight: "8px",
+              margin: "5px 0",
             }}
           >
             {branch.name}
