@@ -5,7 +5,7 @@ const initialState = {
   userEmail: null,
   accessToken: null,
   userRole: null,
-  user: null, // new field for user object
+  user: null,
 }
 
 const authSlice = createSlice({
@@ -13,12 +13,10 @@ const authSlice = createSlice({
   initialState,
   reducers: {
     login: (state, action) => {
-      // action.payload: { email, token, user }
       state.isLoggedIn = !!action.payload.token
       state.userEmail = action.payload.email
       state.accessToken = action.payload.token
       state.user = action.payload.user || null
-      // Set role from user object if available
       state.userRole = action.payload.user?.role || null
     },
     logout: (state) => {
@@ -29,11 +27,10 @@ const authSlice = createSlice({
       state.user = null
     },
     setAuthFromStorage: (state, action) => {
-      // action.payload: { email, token, user }
       state.isLoggedIn = !!action.payload?.token
       state.userEmail = action.payload?.email || null
       state.accessToken = action.payload?.token || null
-      state.userRole = action.payload?.user?.role || null // expects user object with role
+      state.userRole = action.payload?.user?.role || null
       state.user = action.payload?.user || null
     }
   }

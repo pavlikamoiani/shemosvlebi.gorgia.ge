@@ -54,14 +54,14 @@ const initialState = {
       borderColor: "#ed8936",
     },
   ],
-  branchEvents: [], // new state for branch events
+  branchEvents: [],
 }
 
 export const fetchBranchEvents = createAsyncThunk(
   'events/fetchBranchEvents',
   async (branchId) => {
     const res = await defaultInstance.get(`/branches/${branchId}`)
-    return res.data.events // <-- only return the events array
+    return res.data.events
   }
 )
 

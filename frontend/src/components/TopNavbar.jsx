@@ -9,7 +9,6 @@ import { login, setAuthFromStorage } from '../store/slices/authSlice'
 import defaultInstance from '../../api/defaultInstance'
 
 const TopNavbar = () => {
-  // Redux state
   const dispatch = useDispatch()
   const selectedLocation = useSelector(selectSelectedLocation)
   const accessToken = useSelector(state => state.auth.accessToken)

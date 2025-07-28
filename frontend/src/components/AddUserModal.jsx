@@ -33,7 +33,6 @@ const AddUserModal = ({ open, onClose, onSubmit, userData, setUserData, branches
       });
       onSubmit(response.data);
     } catch (error) {
-      // Show password length error if present
       if (
         error.response &&
         error.response.data &&

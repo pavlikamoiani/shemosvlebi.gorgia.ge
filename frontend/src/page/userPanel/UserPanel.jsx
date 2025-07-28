@@ -52,7 +52,7 @@ const UserPanel = () => {
     if (userData.id == null) {
       const newId = Math.max(0, ...users.map(u => u.id)) + 1
 
-      const newUser = { ...userData, id: newId }; //needed only for console log
+      const newUser = { ...userData, id: newId };
       console.log("New user added:", newUser);
 
       setUsers([...users, { ...userData, id: newId }])

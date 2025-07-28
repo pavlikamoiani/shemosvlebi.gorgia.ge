@@ -1,7 +1,7 @@
 import { React, useState, useEffect } from "react"
 import { useSelector, useDispatch } from 'react-redux'
-import { selectFilteredEvents, selectSelectedLocation } from '../../store/selectors'
-import { addEvent, deleteEvent, updateEvent } from '../../store/slices/eventsSlice'
+import { selectSelectedLocation } from '../../store/selectors'
+import { updateEvent } from '../../store/slices/eventsSlice'
 import FullCalendar from "@fullcalendar/react"
 import dayGridPlugin from "@fullcalendar/daygrid"
 import timeGridPlugin from "@fullcalendar/timegrid"
@@ -17,31 +17,24 @@ import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
 const Dashboard = () => {
-  // Redux state
   const dispatch = useDispatch()
-  const filteredEvents = useSelector(selectFilteredEvents)
   const selectedLocation = useSelector(selectSelectedLocation)
-  const user = useSelector(state => state.auth.user) // Get full user object instead of just isLoggedIn
-  const branchEvents = useSelector(state => state.events.branchEvents)
+  const user = useSelector(state => state.auth.user)
 
-  // Local state
   const [selectedEvent, setSelectedEvent] = useState(null)
   const [modalOpened, setModalOpened] = useState(false)
-  const [branches, setBranches] = useState([]) // new state for branches
-  const [calendarEvents, setCalendarEvents] = useState([]) // backend events
+  const [branches, setBranches] = useState([])
+  const [calendarEvents, setCalendarEvents] = useState([])
   const [editModalOpened, setEditModalOpened] = useState(false)
   const [eventToEdit, setEventToEdit] = useState(null)
 
-  // Fetch branches on mount
   useEffect(() => {
     defaultInstance.get('/branches')
       .then(res => setBranches(res.data))
       .catch(() => setBranches([]))
   }, [])
 
-  // Fetch events for selected branch
   useEffect(() => {
-    // Find branch id by name
     const branchObj = branches.find(b => b.name === selectedLocation)
     const branchId = branchObj?.id
 
@@ -91,12 +84,11 @@ const Dashboard = () => {
   const handleDateClick = (arg) => {
     if (!user) {
       alert("Please log in to create an event.");
-      arg.view.calendar.unselect(); // clearing selection
-      tippy.hideAll(); // hide all tooltips
+      arg.view.calendar.unselect();
+      tippy.hideAll();
       return;
     }
 
-    // Check if non-admin user is trying to add an event to a branch that is not their own
     const isAdmin = user?.role === 'admin';
     const userBranch = branches.find(b => b.id === user?.branch_id)?.name;
 
@@ -109,15 +101,12 @@ const Dashboard = () => {
     setModalOpened(true)
   }
 
-  // Helper to format JS Date exactly as 'YYYY-MM-DDTHH:mm:ss' without milliseconds or timezone
   function formatLocalDateTime(date) {
-    // Ensure date is a JS Date object
     if (!(date instanceof Date)) {
       date = new Date(date);
     }
     const pad = n => n.toString().padStart(2, '0');
 
-    // Format exactly matching backend requirement: Y-m-d\TH:i:s
     return (
       date.getFullYear() +
       '-' + pad(date.getMonth() + 1) +
@@ -128,7 +117,6 @@ const Dashboard = () => {
     );
   }
 
-  // Create a reusable function to refresh events with proper branch filter
   const refreshEvents = () => {
     const branchObj = branches.find(b => b.name === selectedLocation);
     const branchId = branchObj?.id;
@@ -156,12 +144,10 @@ const Dashboard = () => {
     }
   };
 
-  // uses Redux
   const handleSaveEvent = async (eventData) => {
     try {
       const formattedDate = formatLocalDateTime(selectedEvent);
 
-      // For non-admin users, ensure branch_id is their assigned branch
       if (user && user.role !== 'admin' && user.branch_id) {
         eventData.branch = user.branch_id;
       }
@@ -178,7 +164,6 @@ const Dashboard = () => {
 
       setModalOpened(false);
 
-      // Use the reusable function to refresh events
       refreshEvents();
     } catch (e) {
       toast.error(e.response?.data?.message);
@@ -188,11 +173,9 @@ const Dashboard = () => {
 
   console.log("Branches loaded:", branches);
 
-  // Handler for updating event
   const handleUpdateEvent = async (eventData) => {
     if (!eventToEdit) return;
     try {
-      // Check if user is authorized to update this event
       const eventUserId = eventToEdit.extendedProps.user_id;
       const currentUserId = user?.id;
       const isAdmin = user?.role === 'admin';
@@ -212,17 +195,14 @@ const Dashboard = () => {
       setEditModalOpened(false);
       setEventToEdit(null);
 
-      // Use the reusable function to refresh events
       refreshEvents();
     } catch (e) {
       toast.error('Event update failed: ' + (e.response?.data?.message || e.message));
     }
   };
 
-  // Helper to delete event via API
   const handleDeleteEvent = async (event) => {
     try {
-      // Check if user is authorized to delete this event
       const eventUserId = event.extendedProps.user_id;
       const currentUserId = user?.id;
       const isAdmin = user?.role === 'admin';
@@ -234,7 +214,6 @@ const Dashboard = () => {
 
       await defaultInstance.delete(`/events/${event.id}`);
 
-      // Use the reusable function to refresh events
       refreshEvents();
     } catch (e) {
       console.error('Event deletion failed:', e.response?.data || e);
@@ -242,11 +221,9 @@ const Dashboard = () => {
     }
   };
 
-  // Handler for deleting event from modal
   const handleDeleteEventFromModal = async () => {
     if (!eventToEdit) return;
     try {
-      // Check if user is authorized to delete this event
       const eventUserId = eventToEdit.extendedProps.user_id;
       const currentUserId = user?.id;
       const isAdmin = user?.role === 'admin';
@@ -262,7 +239,6 @@ const Dashboard = () => {
       setEditModalOpened(false);
       setEventToEdit(null);
 
-      // Use the reusable function to refresh events
       refreshEvents();
     } catch (e) {
       toast.error('Event deletion failed: ' + (e.response?.data?.message || e.message));
@@ -270,12 +246,10 @@ const Dashboard = () => {
   }
 
   const handleEventClick = (clickInfo) => {
-    // Check if user is authorized to edit this event
     const eventUserId = clickInfo.event.extendedProps.user_id;
     const currentUserId = user?.id;
     const isAdmin = user?.role === 'admin';
 
-    // Allow edit if user is admin or event owner
     if (isAdmin || eventUserId === currentUserId) {
       setEventToEdit(clickInfo.event);
       setEditModalOpened(true);
@@ -307,7 +281,6 @@ const Dashboard = () => {
     "ივლისი", "აგვისტო", "სექტემბერი", "ოქტომბერი", "ნოემბერი", "დეკემბერი"
   ];
 
-  // Assuming you have branches in state or props
   const currentBranch = branches.find(b => b.name === selectedLocation)
 
   return (
@@ -346,12 +319,11 @@ const Dashboard = () => {
             currentBranchId={currentBranch ? currentBranch.id : null}
           />
         )}
-        {/* Event Modal for editing */}
         {editModalOpened && eventToEdit && (
           <EventModal
             open={editModalOpened}
             selectedDate={eventToEdit.start}
-            event={eventToEdit} // pass event object for editing
+            event={eventToEdit}
             onSave={handleUpdateEvent}
             onDelete={handleDeleteEventFromModal}
             onClose={() => {
@@ -364,7 +336,6 @@ const Dashboard = () => {
           />
         )}
 
-        {/* Calendar */}
         <div
           style={{
             backgroundColor: "white",

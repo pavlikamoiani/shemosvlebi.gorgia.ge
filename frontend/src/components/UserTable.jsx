@@ -180,7 +180,6 @@ export default function UserTable({ users, onDelete, onEdit }) {
         </Table>
       </StyledTableContainer>
 
-      {/* Delete Confirmation Dialog */}
       <Dialog open={deleteDialogOpen} onClose={handleDeleteCancel}>
         <DialogTitle>
           <Box display="flex" alignItems="center" gap={1}>

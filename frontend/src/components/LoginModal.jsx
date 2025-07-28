@@ -26,7 +26,6 @@ const LoginModal = ({ open, onClose, email, setEmail, password, setPassword, onL
       localStorage.setItem('userEmail', email);
       localStorage.setItem('userData', JSON.stringify(response.data.user));
 
-      // Save user data in Redux with full user object
       dispatch(login({
         email,
         token: response.data.token,

@@ -4,7 +4,6 @@ export const selectAllEvents = (state) => state.events.events
 export const selectSelectedLocation = (state) => state.filters.selectedLocation
 export const selectLocations = (state) => state.filters.locations
 
-// Filtered events selector
 export const selectFilteredEvents = createSelector(
   [selectAllEvents, selectSelectedLocation],
   (events, selectedLocation) => {

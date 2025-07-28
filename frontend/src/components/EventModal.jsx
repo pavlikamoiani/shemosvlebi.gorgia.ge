@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react'
 // Remove custom CSS import
 // import '../assets/css/EventModal.css'
-import defaultInstance from '../../api/defaultInstance'
 import { useSelector } from 'react-redux'
 
 const EventModal = ({
@@ -13,7 +12,7 @@ const EventModal = ({
   event = null,
   onDelete,
   isEdit = false,
-  currentBranchId = null // new prop
+  currentBranchId = null
 }) => {
   const [supplier, setSupplier] = useState('');
   const [category, setCategory] = useState('');
@@ -23,7 +22,6 @@ const EventModal = ({
 
   console.log('EventModal open:', selectedDate);
 
-  // Prevent background scrolling when modal is open
   useEffect(() => {
     if (open) {
       document.body.style.overflow = 'hidden';
@@ -35,7 +33,6 @@ const EventModal = ({
     };
   }, [open]);
 
-  // Prefill fields if editing
   useEffect(() => {
     if (isEdit && event) {
       setSupplier(event.extendedProps?.supplier || event.extendedProps?.name || '');
@@ -45,11 +42,9 @@ const EventModal = ({
       setSupplier('');
       setCategory('');
 
-      // If user is not admin, force their branch_id
       if (!isAdmin && user?.branch_id) {
         setBranch(String(user.branch_id));
       }
-      // Otherwise, set branch to currentBranchId if available, else first branch, else ''
       else if (currentBranchId) {
         setBranch(String(currentBranchId));
       } else if (branches.length > 0) {
@@ -76,7 +71,7 @@ const EventModal = ({
         // selectedDate,
       };
       try {
-        if (onSave) onSave(eventData); // Use parent handler for both create/edit
+        if (onSave) onSave(eventData);
       } catch (err) {
         console.error("Event save error:", err);
       }
@@ -89,7 +84,6 @@ const EventModal = ({
     }
   };
 
-  // formatting date and time in georgian
   const formatDateTime = (date) => {
     if (!date) return { dateStr: "", timeStr: "" }
 
@@ -113,9 +107,8 @@ const EventModal = ({
     const month = georgianMonths[date.getMonth()];
     const year = date.getFullYear();
 
-    // Format time as HH:MM (24-hour)
     const hour = date.getHours().toString().padStart(2, "0");
-    const minute = date.getMinutes().toString().padStart(2, "0"); //ეს ხდის 9-ს 09-დ
+    const minute = date.getMinutes().toString().padStart(2, "0");
 
     const dateStr = `${weekday}, ${day} ${month} ${year}`;
     const timeStr = `${hour}:${minute} სთ.`;
